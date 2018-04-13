@@ -1,0 +1,26 @@
+%!Mode::"Tex:UTF-8"
+\documentclass{article}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\setlength{\parindent}{2em}
+\author{Henry Liu}
+\title{An introduction to algorithms for reflections removal}
+\begin{document}
+  \maketitle
+  \section{What is benchmarking single-image algorithms}
+  \par
+  From the latest VALSE,I realized that removing undesired reflections from a photo taken in front of a glass is of great importance for enhancing the efficiency of visual computing systems. Besides,there are various approaches having been proposed and shown to be visually plausible on small datasets collected by their authors. However,a quantitative comparison of existing approaches using the same dataset has never been conducted due to the lack of suitable benchmark data with ground truth. By reading paper published by Renjie,I learn the first captured Single-image Reflection Removal dataset `SIR2' with 40 controlled and 100 wild scenes, ground truth of background and reflection,which PhD Wan presented.
+
+  For each controlled scene, they further provided ten sets of images under varying aperture settings and glass thicknesses,and performed quantitative and visual quality comparisons for four state-of-the-art single-image reflection removal algorithms using four error metrics.
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.5]{1.png}
+\end{figure}
+
+  \section{What we can learn from it}
+  \par
+  From the Renjie Wan's thesis,I can know a little more about the model to remove reflection based on benchmarking single-image algorithms.The reflection removal problem can be solved by exploring gradient distribution using a single image.
+
+  Of course,it is much difficult to understand the whole theory about the algorithm which was introduced in the VALSE.And I will read more paper about this method.
+
+\end{document} 
