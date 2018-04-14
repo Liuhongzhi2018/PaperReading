@@ -1,0 +1,21 @@
+%!Mode::"Tex:UTF-8"
+\documentclass{article}
+\usepackage{indentfirst}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{A Concurrent Deep Learning Model to Remove Reflections}
+\begin{document}
+  \maketitle
+  \section{What Is Concurrent Deep Learning Model}
+  \par
+  In the VALSE live tonight, Professor Boxin Shi and Student Renjie Wan introduce a model to deal with reflection in the photo. Reflection removal aims at separating the mixture of the desired scene and the undesired reflections. Locating reflection and background edges is a key step for reflection removal. In their thesis and teaching, they bountifully presented a visual depth guided method to remove reflections.
+
+  A concurrent deep learning model is to label the background and reflection edges. They propose a DoF confidence map where pixels with higher DoF values are assumed to belong to the desired background components. Moreover, they observed that images with different resolutions show different properties in the DoF map.
+
+  \section{What We Can Learn from It}
+  \par
+  From the VALSE live, I can know that the photo we got may can not be used to analyze directly, sometimes having reflection in it. The teacher presented a model to remove reflection from photo through long-time research about burning glass.
+
+  Although I understand a little about Laplacian Algorithm, I still have a lot of questions about how to achieve it, which is not only about computer vision but also physics subject, such as optics. I know there is much room to broaden my knowledge.
+
+\end{document} 
