@@ -1,0 +1,20 @@
+%!Mode::"Tex:UTF-8"
+\documentclass{article}
+\bibliographystyle{plain}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{The Method to Evaluation Algorithms}
+\begin{document}
+\maketitle
+  \par
+  As we all know, we often need to understand and then test or verify a new algorithm when we learn it for the first time. I have learnt a little about benchmark dataset which contains a number of scenes. And I will continue to probe how SIR2 dataset can be used to evaluate representative single-image reflection removal algorithms.
+
+  There are four method that PhD Wan and his team
+  chose, which are called AY07, LB14, SK15 and WS16. To begin with, I grasp a concept named quantitative evaluation which is performed by checking the difference between the ground truth of background LB and the estimated background L∗B from each method. The team adopted the local MSE (LMSE) as the first metric: It evaluates the local structure similarity by calculating the similarity of each local patch. To make the which evaluates the similarity of two images from the luminance, contrast, and structure as human eyes do. Then they evaluate the performance of these algorithms using the four error metrics above and show their quantitative performances. The result is within their expectation, since the postcard dataset is purposely made more challenging and the wild dataset contains many complex scenes.
+
+
+
+\end{document} 
