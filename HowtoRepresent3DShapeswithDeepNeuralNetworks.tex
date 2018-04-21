@@ -1,0 +1,26 @@
+%!Mode::"Tex:UTF-8"
+\documentclass{article}
+\bibliographystyle{plain}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{How to Represent 3D Shapes with Deep Neural Networks}
+\begin{document}
+\maketitle
+  \par
+  \section{Questions to Be Dealt With}
+  Neural networks and deep learning now have provided a good solution for many problems in image recognition, speech recognition and natural language processing. Besides, advances in deep learning via deep neural networks have resulted in great gains in the computer vision community.
+
+  However, the methods of analyzing 2D images and 3D shapes are not the same because of the differences in textures and colors as well as geometric structures. The former contain rich textures and colors but the latter do not. Retrieving 3D shapes with sketches is a challenging problem since 2D sketches and 3D shapes are from two heterogeneous domains, which results in large discrepancy between them. Furthermore, 3D shapes contain geometric structures that brings analysis difficulties to deal with if we want to continue research.
+
+\section{The Theory We Aim to Learn}
+
+  Therefore, we need learn how to use two deep convolutional neural networks (CNNs) to extract deep features of sketches and 2D projections of 3D shapes by reading professor Xie's paper. For 3D shapes,the team compute the Wasserstein barycenters of deep features of multiple projections to form a barycentric representation. By constructing a metric network, a discriminative loss is formulated on the Wasserstein barycenters of 3D shapes and sketches in the deep feature space to learn discriminative and compact 3D shape and sketch features for retrieval. And then we can know why the proposed method can significantly improve the retrieval performance.
+
+
+
+
+
+\end{document} 
