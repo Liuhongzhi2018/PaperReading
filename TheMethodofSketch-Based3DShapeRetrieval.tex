@@ -1,0 +1,46 @@
+%!Mode::"Tex:UTF-8"
+\documentclass{article}
+\bibliographystyle{plain}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\DeclareMathOperator*{\argmax}{argmax}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{The Method of Sketch-Based 3D Shape Retrieval}
+\begin{document}
+\maketitle
+  \par
+  \section{The Background of Research Method }
+  Recently extensive research efforts have been dedicated to sketch-based 3D shape retrieval. Besides, deep features have been proposed for the retrieval due to the success of deep neural networks in different applications. By reading Professor Xie's thesis, I can learn Wasserstein barycenters of multiple views of 3D shapes in the feature space for sketch-based shape retrieval.
+
+  The team mainly employ two deep CNNs to extract the CNN features of sketches and 2D projections from a set of rendered views. And then the barycenters of CNN features of 2D projections can then be computed to characterize 3D shapes. Finally, the proposed approach for sketch-based 3D shape retrieval can be demonstrated effective through experimental results.
+
+\section{Proposed Approach}
+
+  In this section, I will introduce main research theory and method in the thesis. One is Wasserstein barycenters and the other is cross-domain matching.
+
+\subsection{Wasserstein barycentric representation method}
+
+  The Wasserstein distance has been widely used in computer vision. And barycenters p$_{b}$ of a set of probability distributions p$_{i}$ can be defined as \cite{Cuturi2015A}:
+\begin{equation}
+   p_{i} = \mathop{\arg\min}_{p_{b}}{\sum{\lambda\times D(p_{i},p_{b})}}
+ \end{equation}
+  where D(p$_{b}$,p$_{i}$) is the Wasserstein distance between p$_{b}$ and p$_{i}$ and $\lambda$ is the weight.
+  
+  Due to the property of the Wasserstein barycenters that can capture the structure of the high-dimensional data well, Professor Xie propose to use the Wasserstein barycenters of projections from multiple views in the feature space to characterize 3D shapes.
+
+\subsection{3D shape retrieval methods}
+  In the thesis, I can learn the Wasserstein barycenters of the deep CNN features of 3D shapes for sketch-based 3D shape retrieval. As is mentioned in paper, author employ two AlexNets to extract deep CNN features of 2D projections and sketches, respectively. Once the CNN features from 3D shapes and sketches are obtained, we use fully connected layers to construct a metric network. Fig. 1 illustrates the cross-domain matching framework with two networks, one for sketch network and the other for view network.
+  
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.2]{1.png}
+\caption{The cross-domain matching framework for sketch-based 3D shape retrieval. By rendering 3D shapes at multiple views, Professor Xie extract deep CNN features of 2D projections. The Wasserstein barycenters of the deep CNN features are computed to represent 3D shapes. With the metric network of fully connected layers, they then formulate a discriminative loss to learn sketch and shape features for cross-domain}
+\end{figure}
+  
+\bibliography{1}
+
+\end{document} 
