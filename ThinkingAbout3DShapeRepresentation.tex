@@ -1,0 +1,64 @@
+%!Mode::"Tex:UTF-8"
+\documentclass{article}
+\bibliographystyle{plain}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\DeclareMathOperator*{\argmax}{argmax}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{Thinking About 3D Shape Representation}
+\begin{document}
+\maketitle
+  \par
+  \section{Overview of 3D Deep Learning}
+  These days I spend much time reading thesis published by Professor Xie and relevant paper. Besides, I try to understand several theories and methods of research presented in them. Luckily, I don't have to work overtime and have a chance to watch VALSE live, whose speaker is Professor Xie, from which I can listen and learn a lot.
+
+  It seems that 3D shape is more heated nowadays probably because of development of sensor. However, there are also a number of challenges in 3D deep learning. 3D model has geometric structure information and irregular data structure compare with 2D image which has pixel value and regular data structure. Furthermore, there are large deformations and structure variation of 3D shapes as well as partial models that cause much more difficulty in the research.
+
+\section{Learn Barycentric Representation of 3D Shapes}
+
+  In this section, I will introduce one of research methods presented by Professor Xie in his 2017 CVPR thesis. Barycentric representation of 3D shapes in order to solve problems that max-view pooling does not exploit information from all view. And They use wasserstein barycenters as a nonlinear pooling operation. We can learn the optimal transportation\cite{Cuturi2013Sinkhorn}:
+\begin{equation}
+  D(p,q) = \min_{T \in R(p,q)}<M,T> + \gamma<T,\log T>
+ \end{equation}
+  where $ < T,\log T > $ is the negative entropy and $ \gamma $ is the regularization parameter.
+
+  They evaluate their learned Wasserstein barycentric representation method for sketch-based 3D shape retrieval, and then compare it to the state-of-theart sketch-based 3D shape retrieval methods on two benchmark datasets, SHREC' 13 sketch track benchmark datasets.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+Methods & NN &FT &ST& E & DCG & mAP\\
+\hline
+CDMR [10]&0.279&0.203&0.296&0.166&0.458&0.250\\
+\hline
+SBR-VC&0.164&0.097&0.149&0.085&0.348&0.116\\
+\hline
+SP [22]&0.017&0.016&0.031&0.018&0.240&0.026\\
+\hline
+FDC [12]&0.110&0.069&0.107&0.061&0.307&0.086\\
+\hline
+Siamese [27]&0.405&0.403&0.548&0.287&0.607&0.469\\
+\hline
+LWBR&0.712&0.725&0.785&0.369&0.814&0.752\\
+\hline
+\end{tabular}
+\caption{Retrieval results on the SHREC' 13 benchmark dataset}
+\end{table}  
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.8]{1.png}
+\caption{The precision-recall curves for the FDC, EFSD, SBRVC
+and proposed LWBR methods on the SHREC' 13 benchmark
+dataset.}
+\end{figure}
+
+\bibliography{1}
+
+
+\end{document} 
