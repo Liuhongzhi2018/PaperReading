@@ -1,0 +1,54 @@
+%!Mode::"Tex:UTF-8"
+\documentclass{article}
+\bibliographystyle{plain}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\DeclareMathOperator*{\argmax}{argmax}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{The Method of Matching an Image And 3D Map}
+\begin{document}
+	\maketitle
+	\par
+	\section{The Background of Research}
+    With the rapid development of social tools such as Wechat and Sina microblog, we can easily see 2D photos which people share on them. However, it is not an easy work to recognize where them took these photos. Now there is a new method of finding the correct matches between a query image and the large 3D map that can resolve issues to a certain extent, which is presented by Professor Li \cite{Liu2017Efficient}. Figure. 1 illustrates the overall pipeline of this method.
+	
+	\begin{figure}[ht]
+		\centering
+		\includegraphics[scale=0.4]{1.png}
+		\caption{They solve a large-scale image-based localization problem by leveraging global contextual information manifested as co-visibility relationship between pairs of 3D map points. (a) Image features extracted from the query image; (b) Assign 2D features to visual words to obtain candidate 3D matches; (c) The matches are ranked based on global contextual information; (d) One-to-one 2D-3D matches are disambiguated; (e) PnP+RANSAC is used for 6-DoF camera pose recovery against the 3D map (f).}
+	\end{figure}
+
+	
+	\section{Method Used in the Paper}
+	
+    Professor Li proposes a new method for image-based camera localization (or IBL in short), against a pre-computed 3D point-cloud map which finds optimal 2D-3D matches in a global manner. This global scheme which exploits global contextual information exhibited not only within 2D features from the query image, but also among all matched 3D points in the map.
+    
+    Furthermore, they conducted lots of experiments to evaluate the efficacy of this proposed global method. They assessed its performance against four standard publicly available benchmark datasets for city-scale localization: (1) Dubrovnik, (2) Rome, (3) Vienna and (4) San Francisco (SF-0). Information about the 4 datasets is summarized in Table. 1.
+
+	\begin{table}[h]
+		\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			Dataset & \#(images) &\#(points) &\#(query images)\\
+			\hline
+			Dubrovnik &6,044&1,975,263&800\\
+			\hline
+			Rome&15,179&4,067,119&1,000\\
+			\hline
+			Vienna&1,324&1,123,028&266\\
+			\hline
+			SF-0&610,773&30,342,328&803\\
+			\hline
+		\end{tabular}
+		\caption{Statistics of the benchmark datasets: the numbers of database images, 3D points and query images.}
+	\end{table}
+	
+	
+	\bibliography{1}
+	
+	
+\end{document} 
