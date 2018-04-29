@@ -1,0 +1,36 @@
+%!Mode::"Tex:UTF-8"
+\documentclass{article}
+\bibliographystyle{plain}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\DeclareMathOperator*{\argmax}{argmax}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{Analysis Step of Matching Method}
+\begin{document}
+\maketitle
+\par	
+\section{2D-3D Matching Method}
+    In the last article, I give a brief introduction about a global method that harnesses global contextual information exhibited both within the query image and among all the 3D points in the map, which is presented by Professor Li. And I will learn more about key steps of this method.
+    
+    First of all, They obtain the co-visibility relationship among 3D points by using the database images. And they assume our 3D map was pre-computed via Structure-from-Motion technique using a large set of database images. Secondly, Professor Li detect a set of 2D feature points along with their view-invariant descriptors and find a set of tentative matches from the 3D graph nodes, by comparing their descriptor similarity via an efficient vocabulary-tree search mechanism. Besides, The team seek a global match between 2D query image and 3D map is to run a Random Walk algorithm on this graph. Finally, they try to recover one-to-one correspondences in order to facilitate camera pose computation.
+
+	
+	\section{To Verify the Global Search Effective}
+	
+    In order to evaluate whether or not the use of global contextua information is effective, Professor Li compare their method with the Active Search method which is considered as the state-of-the-art local search methods. They conducted experiments on the metric version of Dubrovnik dataset with sub-maps with reduced sizes of up to 40, 000 map points \cite{Liu2017Efficient}.
+    
+    After running both algorithms, They compare the histograms of the obtained inlier ratios. The higher the inlier ratio is, the better the method. Figure. 1 gives the distributions of inlier ratios for the two methods. From this, people can clearly see that global method mentioned aboved statistically outperforms Active Search.
+
+\begin{figure}[ht]
+		\centering
+		\includegraphics[scale=0.5]{1.png}
+		\caption{(a). Compare the two histograms of inlier ratios for the 800 query images of Dubrovnik. Red: histogram by our method; Light-blue: histogram by Active-Search. (b). The absolute improvement in terms of inlier numbers over all query images from Dubrovnik. A positive-valued ‘difference’ means more inliers are detected by our method. Our method consistently outperforms the local Active-Search method for almost all 800 queries.}
+\end{figure}
+
+\bibliography{1}
+
+\end{document} 
