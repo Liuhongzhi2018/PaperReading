@@ -1,0 +1,53 @@
+\documentclass[twocolumn]{article}  
+\usepackage{picinpar,graphicx}
+\usepackage{indentfirst}
+\usepackage{cite}
+\title{Traffic Density in Camera}
+\author{Hongzhi Liu}
+\bibliographystyle{unsrt}
+
+\begin{document}
+\maketitle
+\par
+\section{Challenges for Traffic Density}
+	With development of monitor camera, many cities are able to equip with them in order to alleviate traffic congestion. However, there are still problems in detecting vehicles, such as low frame rate and resolution as well as high occlusion. The time interval between two successive frames of a web camera video typically ranges from 1 to 3s which leads to large vehicle displacement. Besides, The holistic approaches perform poorly in camera videos with large perspective and variable vehicle scales. Furthermore, most of existing methods are incapable of estimating the exact number of vehicles.
+	
+	Therefore, Professor Zhang presents a method based on fully convolutional networks (FCN) that can map the dense image feature into vehicle density \cite{1}. This method significantly reduces the mean absolute error (MAE) from 10.99 to 5.31 on the public dataset TRANCOS compared with the state-of-the-art baseline.
+	
+\section{FCN Method Learning}	
+
+    Professor Zhang present FCN method to estimate the vehicle density, inspired by the FCN used in semantic segmentation \cite{2}. The overall structure of our proposed FCN-MT is illustrated in Figure~\ref{fig-FCN}, which contains convolution network, deconvolution network, feature combination and selection, and multi-task residual learning. 
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[scale=0.4]{1.png}
+	\caption{Framework of FCN-MT} \label{fig-FCN}
+\end{figure}
+
+    The team evaluate and compare the proposed methods with baselines on a public dataset TRANCOS to verify the efficacy of method mentioned above. They compare their method with baselines in Table~\ref{TRANCOS}. From the results, people can see that FCN-MT significantly reduces the MAE from 10.99 to 5.31 compared with Baseline 2-Hydra.
+    
+\begin{table}[h]
+	\centering
+	\caption{Results comparison on TRANCOS dataset.}\label{TRANCOS}
+	\begin{tabular}{|c|c|c|}
+		\hline
+		Method & MAE & ARE \\
+		\hline
+		Baseline 1 &13.76&0.6412\\
+		\hline
+		Baseline 2-CCNN&12.49&0.6743\\
+		\hline
+	    Baseline 2-Hydra&10.99&0.7129\\
+		\hline
+		OPT-RC&12.41&0.6674\\
+		\hline
+		FCN-ST&5.47&0.827\\
+		\hline
+	    FCN-MT&5.31&0.856\\
+		\hline
+	\end{tabular}
+\end{table}
+	
+\bibliography{1}
+
+\end{document} 
