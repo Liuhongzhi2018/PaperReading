@@ -1,0 +1,92 @@
+%!Mode::"Tex:UTF-8"
+\documentclass[twocolumn]{article}
+\bibliographystyle{plain}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multicol}
+\DeclareMathOperator*{\argmax}{argmax}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{Grid-based Motion Statistics for Feature Correspondence}
+
+\begin{document}
+	\maketitle
+	\par
+	\section{Feature Correspondence}
+	There are always some unique pixels in an image. These points can be regarded as the feature of an image which are called feature points. Image feature correspondence based on the feature points is very important in the field of computer vision.
+	
+	The concept of feature points has been widely used in the field of computer vision. The principle of this concept is to select some feature points from the image and analyze the image locally rather than to observe the whole image. These points are different and stable. Besides, they can be accurately located. Feature matching is the basic input of many computer vision algorithms. Furthermore, its speed and accuracy as well as robustness maintain a remarkable role in some relevant researches. 
+	
+    \section{Grid-based Motion Statistics}
+	Nowadays, there is a wide performance gap between slow feature matchers and the much faster real-time solutions. A number of techniques have focused on separating true and false matches using match distribution constraints, but their formulations result in complex smoothness constraints, which are difficult to understand and expensive to minimize. Besides, incorporating smoothness constraints into feature matching enables ultra-robust matching. However, such formulations are both complex and slow, making them unsuitable for video applications.
+	
+	Professor Bian presents a simple means of encapsulating motion smoothness as the statistical likelihood of a certain number of matches in a region which is called \emph{GMS} (Grid-based Motion Statistics). We show \emph{GMS} can rapidly and reliably differentiate true and false matches, enabling high quality correspondence in Figure. ~\ref{GMS}.
+	\begin{figure}[ht]
+		\centering
+		\includegraphics[scale=0.5]{1.png}
+		\caption{The highly respected SIFT \cite{Lowe2004Distinctive} descriptor has difficulty on this scene because the dog’s fur movement adds noise to local descriptors. Although they use weaker ORB descriptors, the GMS solution can leverage feature numbers to improve quality while maintaining real-time performance.}\label{GMS}
+	\end{figure}
+	The cost of scoring each feature match's neighborhood is \emph{O(N)}, where \emph{N} is the number of image features. This conflicts with our desire to use as many features as possible. We address it with a grid approximation that divides an image into $G = 20 \times 20 $ nonoverlapping cells \cite{Bian2017GMS}. Scores of potential cell-pairs are computed
+	only once.  
+	
+	Grouping match neighborhoods (cell-pairs) for robustness. They give a more generalized score as equation (\ref{score}) shows.
+	\begin{equation}
+     S_i = \sum_{k=1}^{K} \left\| X_{a^k b^k} \right\|-1 \label{score}
+	\end{equation}
+	where \emph{K} is the number of disjoint regions which match \emph{i} predicts move together.
+	We group cell-pairs using a smooth lateral motion assumption. Thus from equation (\ref{score}), the score $S_{ij}$ for cell-pair $ \left\{i,j \right\} $ is shown in equation (\ref{score1}).
+	
+	\begin{equation}
+	S_{ij} = \sum_{k=1}^{K=9} \left\| X_{i^k j^k} \right\| \label{score1}
+	\end{equation}
+	where $\left\| X_{i^k j^k} \right\|$ is the number of matches between cells
+	$ \left\{i^k,j^k\right\} $ shown in Figure. ~\ref{cell}.
+
+	\begin{figure}[ht]
+		\centering
+		\includegraphics[scale=0.6]{2.png}
+		\caption{9 regions around cells $ \left\{i,j\right\} $ used in score evaluation.}\label{cell}
+	\end{figure}
+	
+	Thresholding $S_{ij}$ to divide cell-pairs into true and false sets $ \left\{T,F\right\} $. In practice, $m_{f}$ is small by design, while $\alpha$ is very large to ensure confident rejection of the large number of wrong cell-pair. The results in a single parameter thresholding function as shown in equations (\ref{pair}):
+	\begin{equation}
+	cell-pair \in \left\{i,j\right\}=
+	\begin{cases}
+	T, & \mbox{if} \quad S_{ij} > t_{i} = \alpha \sqrt{n_{i}} \\
+	F, & \mbox{otherwise}
+	\end{cases}   \label{pair}
+	\end{equation}
+	where $\alpha = 6$ is experimentally determined and $n_{i}$ is the average (of the 9 grid-cells in Figure.~\ref{cell}) number of features present in a single grid-cell.
+	
+	\section{Datasets and Evaluation}
+	For evaluation, Professor Bian selects four datasets, TUM \cite{Sturm2012A}, Strecha \cite{Strecha2008On}, VGG \cite{Mikolajczyk2005A} and Cabinet\cite{Sturm2012A}, described in Table.~\ref{1}. 
+	
+	Professor Bian's team propose \emph{GMS}, a statistical formulation for partitioning of true and false matches based on the number of neighboring matches. While this constraint has been implicitly employed by other techniques, their more principled approach enables development of simpler, faster algorithms with nearly equivalent performance.
+
+	\begin{table}[htbp]
+	\centering
+	\caption{Dataset details. Strecha and VGG are standard benchmarks. TUM and Cabinet dataset are VGA resolution videos.} \label{1}
+	\begin{tabular}{|p{1.5cm}|p{1cm}|p{1.5cm}|p{2cm}|p{1.5cm}|}
+		\hline
+		Dataset & TUM & Strecha & VGG & Cabinet\\
+		\hline
+		Full name & RGB-D SLAM Dataset& Dense Multiview
+		Stereo Dataset & Affine Covariant Regions Datasets & A subset of
+		TUM dataset\\
+		\hline
+		Image pairs & 3,141 & 500 & 40 &578\\
+		\hline
+		Ground truth & Camera pose& Camera pose& Homography & Camera pose\\
+		\hline
+		Description &Including all image&Well-textured images & Viewpoint change& Low-texture images \\
+		\hline  
+	\end{tabular}
+\end{table}
+
+
+\bibliography{1}
+	
+\end{document} 
