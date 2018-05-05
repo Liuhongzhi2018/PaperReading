@@ -23,26 +23,26 @@
     \section{Grid-based Motion Statistics}
 	Nowadays, there is a wide performance gap between slow feature matchers and the much faster real-time solutions. A number of techniques have focused on separating true and false matches using match distribution constraints, but their formulations result in complex smoothness constraints, which are difficult to understand and expensive to minimize. Besides, incorporating smoothness constraints into feature matching enables ultra-robust matching. However, such formulations are both complex and slow, making them unsuitable for video applications.
 	
-	Professor Bian presents a simple means of encapsulating motion smoothness as the statistical likelihood of a certain number of matches in a region which is called \emph{GMS} (Grid-based Motion Statistics). We show \emph{GMS} can rapidly and reliably differentiate true and false matches, enabling high quality correspondence in Figure. ~\ref{GMS}.
+	Professor Bian presents a simple means of encapsulating motion smoothness as the statistical likelihood of a certain number of matches in a region which is called \emph{GMS} (Grid-based Motion Statistics). They show \emph{GMS} can rapidly and reliably differentiate true and false matches, enabling high quality correspondence in Figure.~\ref{GMS}.
 	\begin{figure}[ht]
 		\centering
 		\includegraphics[scale=0.5]{1.png}
 		\caption{The highly respected SIFT \cite{Lowe2004Distinctive} descriptor has difficulty on this scene because the dog’s fur movement adds noise to local descriptors. Although they use weaker ORB descriptors, the GMS solution can leverage feature numbers to improve quality while maintaining real-time performance.}\label{GMS}
 	\end{figure}
-	The cost of scoring each feature match's neighborhood is \emph{O(N)}, where \emph{N} is the number of image features. This conflicts with our desire to use as many features as possible. We address it with a grid approximation that divides an image into $G = 20 \times 20 $ nonoverlapping cells \cite{Bian2017GMS}. Scores of potential cell-pairs are computed
+	The cost of scoring each feature match's neighborhood is \emph{O(N)}, where \emph{N} is the number of image features. This conflicts with their desire to use as many features as possible. The team address it with a grid approximation that divides an image into $G = 20 \times 20 $ nonoverlapping cells \cite{Bian2017GMS}. Scores of potential cell-pairs are computed
 	only once.  
 	
 	Grouping match neighborhoods (cell-pairs) for robustness. They give a more generalized score as equation (\ref{score}) shows.
 	\begin{equation}
-     S_i = \sum_{k=1}^{K} \left\| X_{a^k b^k} \right\|-1 \label{score}
+     S_i = \sum_{k=1}^{K} \left| X_{a^k b^k} \right|-1 \label{score}
 	\end{equation}
 	where \emph{K} is the number of disjoint regions which match \emph{i} predicts move together.
-	We group cell-pairs using a smooth lateral motion assumption. Thus from equation (\ref{score}), the score $S_{ij}$ for cell-pair $ \left\{i,j \right\} $ is shown in equation (\ref{score1}).
+	They group cell-pairs using a smooth lateral motion assumption. Thus from equation (\ref{score}), the score $S_{ij}$ for cell-pair $ \left\{i,j \right\} $ is shown in equation (\ref{score1}).
 	
 	\begin{equation}
-	S_{ij} = \sum_{k=1}^{K=9} \left\| X_{i^k j^k} \right\| \label{score1}
+	S_{ij} = \sum_{k=1}^{K=9} \left| X_{i^k j^k} \right| \label{score1}
 	\end{equation}
-	where $\left\| X_{i^k j^k} \right\|$ is the number of matches between cells
+	where $\left| X_{i^k j^k} \right|$ is the number of matches between cells
 	$ \left\{i^k,j^k\right\} $ shown in Figure. ~\ref{cell}.
 
 	\begin{figure}[ht]
