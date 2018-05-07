@@ -1,0 +1,45 @@
+%!Mode::"Tex:UTF-8"
+\documentclass[twocolumn]{article}
+\bibliographystyle{plain}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multicol}
+\DeclareMathOperator*{\argmax}{argmax}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{Learning about SGM-Nets}
+
+\begin{document}
+	\maketitle
+	\par
+	\section{Semi-global matching}
+	As is known to all, \emph{SGM} (Semi-global matching) is a widely used regularization method due to its high accuracy while keeping low computation cost. Even though \emph{SGM} can obtain accurate results, tuning of \emph{SGM}’s penalty-parameters which control a smoothness and discontinuity of a disparity map is uneasy and empirical methods have been proposed.
+	
+	First I can learn a lot about \emph{SGM} \cite{Hirschmuller2007Stereo}. An energy function $\mathbb{E}$ for solving \emph{SGM} is defined as Eq. \ref{1} :
+	\begin{equation}
+	\begin{split}
+	\mathbb{E}(D) &=\sum_x \left( C(x,d^x) +\sum_{y\in N_x}P_1 T \left[ \left| d^x-d^y \right|=1 \right] \right)  \\
+	&+\sum_x \left( \sum_{y\in N_x} P_2 T \left[ \left| d^x-d^y \right|>1 \right] \right).
+	\end{split} \label{1}
+	\end{equation}
+	
+	$C(x, dx)$ represents a matching cost at pixel $x = (u, v)$ of disparity $d^x$. The first term represents the sum of matching costs at all pixels for the disparity map $D$. The second term represents slanted surface penalty $P_1$ for all pixels y in the neighborhood $N_x$ of $x$. The third term indicates penalty $P_2$ for discontinuous disparity. $P_2$ is typically set small according to the magnitude of the image gradient, for example $P_2 = P_2'/\left||I(x) − I(y)\right| $ so that the discontinuities are easily selected.
+	
+	Professor Seki proposes a new loss function in order to train neural networks which inputs are small patches and their location. New \emph{SGM} parameterization that separates the positive and negative disparity changes in order to represent object structures discriminatively. \emph{SGM-Nets} were able to outperform state of the art accuracy on KITTI datasets without the need for an explicit foreground shape prior such as a vehicle.
+	
+    \section{Semi-global matching with neural networks}
+	During the training phase, \emph{SGM-Nets} is iteratively trained by minimizing two kinds of costs, which are "Path cost" and "Neighbor cost". Figure \ref{SGM-Nets} illustrates an overview of their proposed method. Their neural network which they call SGM-Net provides $P_1$ and $P_2$ at each pixel.
+	
+	\begin{figure}[ht]
+		\centering
+		\includegraphics[scale=0.4]{1.png}
+		\caption{Overview of \emph{SGM-Nets}. \emph{SGM} estimates dense disparity by incorporating penalty $P_1$ and $P_2$ from \emph{SGM-Nets}. \emph{SGM-Nets} is iteratively trained on each aggregation direction with image patches and their positions.}\label{SGM-Nets}
+	\end{figure}
+
+
+\bibliography{1}
+	
+\end{document} 
