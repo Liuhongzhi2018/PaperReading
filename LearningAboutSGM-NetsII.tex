@@ -19,7 +19,7 @@
 	In the last article, I learned a lot about \emph{SGM} (Semi-global matching) including its strengths and weaknesses \cite{Seki2017SGM}. Besides, I briefly introduced  an overview of \emph{SGM-Net}. Then I will continue to learn about standard parameterization of \emph{SGM} and an architecture of \emph{SGM-Net}. 
 	
 	According to the thesis of Professor Seki, a necessary condition to obtain the correct disparity is that a path traversing the correct disparity
-	$d_{gt}^{x_0}$ at pixel $x_0$ should be smaller than any other paths, i.e. a cost $L_r$ at pixel $x_0$ must satisfy $L_r \left( x_0, d_i^{x_0} \right) >L_r \left( x_0, d_{gt}^{x_0} \right)$, $\forall d_i \in \left[ 0,d_{max}\right] \ne d_{gt} $. Ant they formulate it with a hinge loss function as Eq. (\ref{eq:cost}):
+	$d_{gt}^{x_0}$ at pixel $x_0$ should be smaller than any other paths, i.e. a cost $L_r$ at pixel $x_0$ must satisfy $L_r \left( x_0, d_i^{x_0} \right) >L_r \left( x_0, d_{gt}^{x_0} \right)$, $\forall d_i \in \left[ 0,d_{max}\right] \ne d_{gt} $. And they formulate it with a hinge loss function as Eq. (\ref{eq:cost}):
 	\begin{equation}
 	E_g = \sum_{d_i^{x_0}\ne d_{gt}^{x_0}} max \left( 0,L_r \left( x_0, d_i^{x_0} \right) - L_r \left( x_0, d_{gt}^{x_0} \right) + m \right) \label{eq:cost}
 	\end{equation}
