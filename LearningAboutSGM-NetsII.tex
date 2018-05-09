@@ -1,0 +1,88 @@
+%!Mode::"Tex:UTF-8"
+\documentclass[twocolumn]{article}
+\bibliographystyle{unsrt}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multicol}
+\DeclareMathOperator*{\argmax}{argmax}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{Learning About SGM-Nets \uppercase\expandafter{\romannumeral2}}
+
+\begin{document}
+	\maketitle
+	\par
+	\section{SGM-Net}
+	In the last article, I learned a lot about \emph{SGM} (Semi-global matching) including its strengths and weaknesses \cite{Seki2017SGM}. Besides, I briefly introduced  an overview of \emph{SGM-Net}. Then I will continue to learn about standard parameterization of \emph{SGM} and an architecture of \emph{SGM-Net}. 
+	
+	According to the thesis of Professor Seki, a necessary condition to obtain the correct disparity is that a path traversing the correct disparity
+	$d_{gt}^{x_0}$ at pixel $x_0$ should be smaller than any other paths, i.e. a cost $L_r$ at pixel $x_0$ must satisfy $L_r \left( x_0, d_i^{x_0} \right) >L_r \left( x_0, d_{gt}^{x_0} \right)$, $\forall d_i \in \left[ 0,d_{max}\right] \ne d_{gt} $. Ant they formulate it with a hinge loss function as Eq. (\ref{eq:cost}):
+	\begin{equation}
+	E_g = \sum_{d_i^{x_0}\ne d_{gt}^{x_0}} max \left( 0,L_r \left( x_0, d_i^{x_0} \right) - L_r \left( x_0, d_{gt}^{x_0} \right) + m \right) \label{eq:cost}
+	\end{equation}
+	
+    \begin{figure}[ht]
+    	\centering
+    	\includegraphics[scale=0.6]{1.png}
+    	\caption{Consecutive 4 pixels and their 5 candidate disparities at each pixel. The orange and purple line represent the path fromcorrect disparity $d_{gt}^{x_0}$ and $d_5$ at root pixel $x_0$,respectively.}\label{pathcost}
+    \end{figure}
+
+    where $m$ means margin. The hinge loss function allows easier formulation of back-propagation compared to other functions such as softmax loss. In order to allow the backpropagation of the loss function, they clarify the gradients of Eq.~(\ref{eq:cost}) with respect to $p_1$ and $p_2$. I can see an example in Fig.~\ref{pathcost} .
+\begin{equation}
+\begin{aligned}
+\begin{split}
+\frac{\partial E_g}{\partial P_{1,r}} =\sum_{d_i^{x_0}\ne d_{gt}^{x_0}}\sum_{n} \left(T\left[\left|\delta d^{x_n\gets d_{gt}^{x_0} }\right|=1\right] \right.\\ \left. -T\left[ \left|\delta d^{x_n\gets d_{t}^{x_0}}\right|=1\right] \right)\\
+\frac{\partial E_g}{\partial P_{2,r}} =\sum_{d_i^{x_0}\ne d_{gt}^{x_0}}\sum_{n} \left(T\left[\left|\delta d^{x_n\gets d_{gt}^{x_0} }\right|>1\right] \right.\\ \left. -T\left[ \left|\delta d^{x_n\gets d_{t}^{x_0}}\right|>1\right] \right)
+\end{split} \label{equations}
+\end{aligned}
+\end{equation}
+    With the Eq.~(\ref{equations}), the team is able to minimize the loss function by using the standard framework, i.e. forward and back propagation. Therefore they call this loss function ``Path cos''.
+    
+    In order to remove the ambiguity of disparities traversed along the path, Professor Seki introduces ``Neighbor cost'' function. In order to compensate the advantage and difficulty of the path and neighbor costs, equations are put together and finally the loss function becomes in Eq.~\ref{equation2}:
+\begin{equation}
+\begin{aligned}
+\begin{split}
+E =\sum_{r \in R}\left(\sum_{{x_0,x_1} \in G_b} E_{n_b} + \sum_{{x_0,x_1} \in G_s} E_{n_s} +  \right.\\ 
+\left. \sum_{{x_0,x_1} \in G_f} E_{n_f} + \xi \sum_{x_0 \in G} E_g \right)\\
+\end{split} \label{equation2}
+\end{aligned}
+\end{equation}    
+    where $\xi$ means a blending ratio. They randomly extracted the same number of pixels for border $G_b$, slant $G_s$, and flat $G_f$ on each direction $r$. All $G*$ have annotation of true disparity. The disparity map given by \emph{SGM-Nets} trained with Eq.~(\ref{equation2}) is shown in Fig.~\ref{costs}.
+    
+    \begin{figure}[ht]
+    	\centering
+    	\includegraphics[scale=0.6]{2.png}
+    	\caption{Comparison of the costs for the loss function.}\label{costs}
+    \end{figure}
+
+    \section{Evaluation of SGM-Nets}
+    Professor Seki evaluated \emph{SGM-Nets} with the test images on the website. Table~\ref{table1} shows estimated error and absolute ranking on K12. Signed and standard \emph{SGM-Nets} got the 1st rank on K12. 
+
+	\begin{table}[htbp]
+		\centering
+		\caption{Out-Noc error on KITTI 2012 testing dataset by October
+			18th 2016. ``*'' means GPU computation.}\label{table1}
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+		     Rank & Method & Error & Time [sec.] \\
+			\hline
+			1 & Signed SGM-Net & 2.29\% & 67* \\
+			\hline
+			2 & Standard SGM-Net & 2.33\% & 67* \\
+			\hline
+			3 & PBCP\cite{Seki2016Patch} & 2.36\% & 68* \\
+			\hline
+			4 & Displets v2 \cite{Guney2015Displets}  & 2.37\% & 265 \\
+			\hline
+			5 & MC-CNN-acrt \cite{Lecun2015Stereo} & 2.43\% & 67* \\
+			\hline
+		\end{tabular}
+	\end{table}
+    Besies, their method achieved the same accuracy on the overall criterion without the prior knowledge. Professor Seki emphasises that the most of computation time is consumed by stereo correspondence. \emph{SGM-Nets} take only a few seconds on the GPU.
+
+\bibliography{1}
+	
+\end{document} 
