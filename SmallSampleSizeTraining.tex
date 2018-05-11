@@ -1,0 +1,69 @@
+%!Mode::"Tex:UTF-8"
+\documentclass[twocolumn]{article}
+\bibliographystyle{unsrt}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multicol}
+\usepackage[colorlinks,linkcolor=red,citecolor=green]{hyperref}
+\DeclareMathOperator*{\argmax}{argmax}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{Small Sample Size Training}
+
+\begin{document}
+	\maketitle
+	\par
+	\section{Talking about SSF-CNN}
+	As is known to all, Convolutional Neural Networks (CNN) have provided advanced results in several computer vision problems. And of course, it is a multilayer representation learning architecture which has received immense success in multiple applications such as object classification and image segmentation.
+	
+	However, large training data is also a limiting requirement for applications with small sample size and many of these architectures easily overfit on small training samples. To address the challenge of small sample size, Professor Keshari presents a novel approach, termed as Structure and Strength Filtered CNN (SSF-CNN) \cite{DBLP:journals/corr/abs-1803-11405}. Specifically, in case of newborn face recognition, remarkable improvement in accuracy is achieved with the proposed approach.
+	\begin{figure}[ht]
+		\centering
+		\includegraphics[scale=0.6]{1.png}
+		\caption{Filter visualization of the (i) $1^{st}$ layer and (ii) $2^{nd}$ layer of the ResNet architecture on CIFAR10 dataset. (a) Xavier \cite{Glorot2010Understanding} initialized filters at zero epoch, (b) Xavier initialized filters are trained on 1000 training samples, (c) MSRA \cite{He2015Delving}initialized filters at zero epoch, (d) MSRA initialized filters are trained on 1000 training samples, and (e) Dictionary initialized filters at zero epoch. For better visualization, only 16 filters are used from the $2^{nd}$ layer.}\label{structure}
+	\end{figure}
+   
+   It is well known that matrix factorization or dictionary learning allows us to learn the dictionary that helps encoding the representative features. If one can represent CNN filters using dictionary, it can provide the ``structure'' but may not be well optimized for the classification task. 
+
+   In the thesis, Professor Keshari proposes to use dictionary learning algorithm for learning the structure of the filters. The algorithm can be divided into two steps. One is learning hierarchical dictionary filters and utilize trained dictionary filters to initialize the CNN, and the other is training CNN with dictionary initialized filters. As shown in Figure~\ref{structure}, filters learned from the dictionary learning technique show more ``structure'' than traditional approaches, particularly with small training data.
+   
+   Learning structure of filters is mentioned above. And the proposed concept of learning strength of the filter is illustrated in Figure~\ref{strength}. The team freeze the values of filters obtained from dictionary learning technique and update only the strength of the filter. As shown in Figure~\ref{strength}, this significantly reduces the number of learning parameters. For $l^{th}$ layer, the strength parameter `$t^l$' is learned using stochastic gradient descent method; i.e. a scalar value is learned rather than learning the complete filter. The proposed process can be written as Equation. (\ref{eq}):
+   
+   \begin{figure}[ht]
+   	\centering
+   	\includegraphics[scale=0.6]{2.png}
+   	\caption{Illustrating the concept of learning the strength of a filter
+   		which significantly reduces the number of training parameters.}\label{strength}
+   \end{figure}
+
+	\begin{equation}
+	f(X,W,b,t) = X \times (t\odot W) +b \label{eq}
+	\end{equation}
+	
+   where, $\left( t\odot W \right) $ represents element-wise multiplication. The pre-trained filters learned from dictionary learning or pre-trained model are selected and the only variable to be learned is $t$ which can be learned using SGD. Since $\left| W\right| \gg \left| t \right| $, even small training data can be used to train the network. In literature, various regularization techniques have been utilized for better convergence. Existing regularization techniques such as dropconnect and $\ell_1$ regularization can also be used while learning $t$.
+    
+    \section{Evaluation of SSF-CNN}
+    The effectiveness of the proposed algorithm is evaluated on multiple databases with state-of-the-art CNN architectures. Since the proposed architecture is for small size trainingdata, the experiments are performed with varying training sizes on three databases that is MNIST \cite{Haykin2009GradientBased}, CIFAR10 \cite{Krizhevsky2009Learning}, and NORB \cite{Lecun2004Learning}.
+
+  \begin{table}[htbp]
+  \centering
+  \caption{Experimental protocols for MNIST, CIFAR-10 and NORB databases.}\label{table1}
+  \begin{tabular}{|c|c|p{1.5cm}|p{1.5cm}|}
+  \hline
+  Databases & Small Training Data & Standard Training & Standard Testing \\
+  \hline
+  MNIST & 100 : 100 : 1k; 1k : 1k : 5k & 50k & 10k \\
+  \hline
+  CIFAR-10 & 100 : 100 : 1k; 1k : 1k : 5k & 40k & 10k \\
+  \hline
+  NORB & 100 : 100 : 1k; 1k : 1k : 5k & 20k & 24.3k \\
+  \hline
+  \end{tabular}
+  \end{table}
+    More specifically, as shown in Table~\ref{table1}, the experiments are performed with 14 data sizes, 100, 200,$\cdots$, 1000, 2000,$\cdots$, 5000. The proposed algorithm is also tested with the complete/standard training set. Furthermore, experiments are performed on an interesting and small sample size problem of newborn face recognition. I can also learn that the proposed algorithm by Professor Keshari, in general yields higher performance compared to several existing algorithms.
+\bibliography{1}
+	
+\end{document} 
