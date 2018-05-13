@@ -21,7 +21,7 @@
 	
 	In order to overcome the limitation of requiring prior knowledge on the usually unknown structures of the errors in practice, we need to learn a kind of ridge regression model \cite{Peng2017Subspace} which is introduced by Professor Peng.
 	\subsection{The Concept of VR3}
-	 In the paper of Professor Peng, he adopt the following ridge regression model as Equation~(\ref{eq1}):
+	 In the paper of Professor Peng, he adopts the following ridge regression model as Equation~(\ref{eq1}):
 	\begin{equation}
 	J_w= \min_Z \parallel Y-YZ\parallel_F^2+ \tau\parallel Z\parallel_F^2 \label{eq1}
 	\end{equation}
@@ -36,7 +36,7 @@
 	\end{split} 
 	\end{aligned}
 	\end{equation}
-	where $G_P$ and $G_Q$ are defined to be 2D covariance matrices. And $\gamma_1, \gamma_2 > 0$, are two balancing parameters. It is seen that by minimizing the above objective function, the projections enables us to capture the most variational information from the 2D data and construct the most expressive self-expression, which lead to a powerful data representation.
+	where $G_P$ and $G_Q$ are defined to be 2D covariance matrices. And $\gamma_1, \gamma_2 > 0$, are two balancing parameters. It is seen that by minimizing the above objective function, the projections enable us to capture the most variational information from the 2D data and construct the most expressive self-expression, which lead to a powerful data representation.
 	\subsection{The Concept of NVR3}
 	In the last section, I learn about 2D Variance Regularized Ridge Regression (VR3). Then Professor Peng expands their VR3 model to account for nonlinearity in the instance space. 
 	
@@ -49,12 +49,12 @@
 	\end{split} 
 	\end{aligned}
 	\end{equation}
-	where $L_P$ (resp. $L_Q$) is obtained from $D_P-W_P$ (resp. $D_Q-W_Q$). where $W = \left[w_{ij}\right] $ is the similarity matrix with $w_{ij}$ being the similarity between $y_i$ and $y_j$ , and $D$ is a diagonal matrix with $d_{ii}=\sum_{j}W_{ij}$. It is seen that the manifolds are learned adaptively, such that the processes of learning projections, representations, and manifold mutually enhance, thus leading to a powerful data representation.
+	where $L_P$ (resp. $L_Q$) is obtained from $D_P-W_P$ (resp. $D_Q-W_Q$) and $W = \left[w_{ij}\right] $ is the similarity matrix with $w_{ij}$ being the similarity between $y_i$ and $y_j$ , and $D$ is a diagonal matrix with $d_{ii}=\sum_{j}W_{ij}$. It is seen that the manifolds are learned adaptively, such that the processes of learning projections, representations, and manifold mutually enhance, thus leading to a powerful data representation.
 
     \section{Evaluation of VR3 and NVR3}
     To evaluate the effectiveness of the proposed VR3 and NVR3, several state-of-the-art or recently developed subspace clustering methods are taken as baseline algorithms. For unsupervised learning methods, insensitivity to parameter variations is demanding for enhancing their stability in real world applications. 
     
-    Professor Peng conducts experiments on Alphadigits data set to illustrate the insensitivities of VR3 and NVR3 to parameter variations. Besides, in Figure~\ref{Performance}(a), we fix $\tau=600$ to show the performance of VR3 with respect to different combinations of $\gamma_1$ and $\gamma_2$. 
+    Professor Peng conducts experiments on Alphadigits data set to illustrate the insensitivities of VR3 and NVR3 to parameter variations. Besides, in Figure~\ref{Performance}(a), they fix $\tau=600$ to show the performance of VR3 with respect to different combinations of $\gamma_1$ and $\gamma_2$. 
     
     \begin{figure}[ht]
     	\centering
