@@ -1,0 +1,68 @@
+%!Mode::"Tex:UTF-8"
+\documentclass[twocolumn]{article}
+\bibliographystyle{unsrt}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multicol}
+\usepackage[colorlinks,linkcolor=red,citecolor=green]{hyperref}
+\DeclareMathOperator*{\argmax}{argmax}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{Subspace Clustering via Ridge Regression}
+
+\begin{document}
+	\maketitle
+	\par
+	\section{The Model of Ridge Regression}
+	During the last decade, subspace clustering algorithms have attracted substantial reserach attention, among which spectral clustering based subspace clustering methods have been popular due to their promising performance such as low-rank representation (LRR) \cite{Liu2010Robust} and sparse subspace clustering (SSC) \cite{Elhamifar2013Sparse}. 
+	
+	In order to overcome the limitation of requiring prior knowledge on the usually unknown structures of the errors in practice, we need to learn a kind of ridge regression model \cite{Peng2017Subspace} which is introduced by Professor Peng.
+	\subsection{The Concept of VR3}
+	 In the paper of Professor Peng, he adopt the following ridge regression model as Equation~(\ref{eq1}):
+	\begin{equation}
+	J_w= \min_Z \parallel Y-YZ\parallel_F^2+ \tau\parallel Z\parallel_F^2 \label{eq1}
+	\end{equation}
+	where $J_w$ is a loss function and $\tau > 0$ is a balancing parameter. Here, the team do not require $z_{ii} = 0$ because: 1) $y_i$ is in the intrasubspace of $y_i$ itself, thus $z_{ii} \neq 0$ is meaningful; 2) $\tau > 0$ already excludes potentially trivial solutions such as $I_n$; 3) its effectiveness and efficiency are verified by experiments.
+	
+	It is noted that Equation~(\ref{eq1}) starkly differs from the existing subspace clustering models, because 2D data are directly used with projections such that inherent spatial information is retained. After Professor Peng finds the optimal projection matrices, he proposes the following 2D Variance Regularized Ridge Regression (VR3) model as Equation~(\ref{eq2}): 
+	\begin{equation}
+	\begin{aligned}
+	\begin{split}
+	J_w&= \min_{Z,P^TP=I_r,Q^TQ=I_r} \parallel Y-YZ \parallel_F^2+ \tau \parallel Z \parallel_F^2 \\
+	&+\gamma_1 Tr\left(P^TG_PP\right)+\gamma_2 Tr\left(Q^TG_QQ\right)    \label{eq2}
+	\end{split} 
+	\end{aligned}
+	\end{equation}
+	where $G_P$ and $G_Q$ are defined to be 2D covariance matrices. And $\gamma_1, \gamma_2 > 0$, are two balancing parameters. It is seen that by minimizing the above objective function, the projections enables us to capture the most variational information from the 2D data and construct the most expressive self-expression, which lead to a powerful data representation.
+	\subsection{The Concept of NVR3}
+	In the last section, I learn about 2D Variance Regularized Ridge Regression (VR3). Then Professor Peng expands their VR3 model to account for nonlinearity in the instance space. 
+	
+	Because nonlinear relationship in the instance space usually exists and is important in real world applications, it is important to take into consideration such nonlinearity. Here, the team aim to consider the nonlinear relationship of the projected data with both projection matrices and present their model of Nonlinear VR3 (NVR3) as Equation~(\ref{eq3}):
+	\begin{equation}
+	\begin{aligned}
+	\begin{split}
+	J_w&= \min_{Z,P^TP=I_r,Q^TQ=I_r}J(Q,P,Z)+ \eta_1 Tr\left(ZL_PZ^T\right) \\
+	&+\eta_2 Tr\left(ZL_QZ^T\right)    \label{eq3}
+	\end{split} 
+	\end{aligned}
+	\end{equation}
+	where $L_P$ (resp. $L_Q$) is obtained from $D_P-W_P$ (resp. $D_Q-W_Q$). where $W = \left[w_{ij}\right] $ is the similarity matrix with $w_{ij}$ being the similarity between $y_i$ and $y_j$ , and $D$ is a diagonal matrix with $d_{ii}=\sum_{j}W_{ij}$. It is seen that the manifolds are learned adaptively, such that the processes of learning projections, representations, and manifold mutually enhance, thus leading to a powerful data representation.
+
+    \section{Evaluation of VR3 and NVR3}
+    To evaluate the effectiveness of the proposed VR3 and NVR3, several state-of-the-art or recently developed subspace clustering methods are taken as baseline algorithms. For unsupervised learning methods, insensitivity to parameter variations is demanding for enhancing their stability in real world applications. 
+    
+    Professor Peng conducts experiments on Alphadigits data set to illustrate the insensitivities of VR3 and NVR3 to parameter variations. Besides, in Figure~\ref{Performance}(a), we fix $\tau=600$ to show the performance of VR3 with respect to different combinations of $\gamma_1$ and $\gamma_2$. 
+    
+    \begin{figure}[ht]
+    	\centering
+    	\includegraphics[scale=0.6]{1.png}
+    	\caption{Performance of VR3 and NVR3. $K = 2$ on the left while $K = 10$ on the right for (a)-(c).}\label{Performance}
+    \end{figure}
+
+   To demonstrate the effectiveness of this tunning strategy, Professor Peng sets $\gamma_1=\gamma_2 = \gamma$ and Figure~\ref{Performance}(b) shows the performance of VR3 with various combinations. In fact, if they set $\eta_1$ and $\eta_2$ to be zero, then Figure~\ref{Performance}(a)-(b) are special cases of NVR3. In Figure~\ref{Performance}(c), they show the performance of NVR3 with different combinations of $\eta_1$ and $\eta_2$. The promising performance of the proposed VR3 and NVR3 indicates their potential in real world applications.
+\bibliography{1}
+	
+\end{document} 
