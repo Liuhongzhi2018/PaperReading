@@ -1,0 +1,98 @@
+%!Mode::"Tex:UTF-8"
+\documentclass[twocolumn]{article}
+\bibliographystyle{unsrt}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\usepackage[colorlinks,linkcolor=red,citecolor=green]{hyperref}
+\DeclareMathOperator*{\argmax}{argmax}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{A Model for Mobile Vision Applications}
+
+\begin{document}
+	\maketitle
+	\par
+	\section{The Background of MobileNets Models}
+	In recent years, convolutional neural networks (CNNs) have become ubiquitous in computer vision. There has been rising interest in building small and efficient neural networks. In other word, the general trend has been to make deeper and more complicated networks in order to achieve higher accuracy but those advances are not necessarily making networks more efficient with respect to size and speed. In many real world applications such as robotics, self-driving car and augmented reality, the recognition tasks need to be carried out in a timely fashion on a computationally limited platform. However, many methods which on small networks in the recent literature \cite{DBLP:journals/corr/IandolaMAHDK16,DBLP:journals/corr/JinDC14,Rastegari2016XNOR} focus only on size but do not consider speed.
+	
+	In the thesis of Professor Howard, he presents a class of efficient models called MobileNets for mobile and embedded vision applications \cite{DBLP:journals/corr/HowardZCKWWAA17} which are based on a streamlined architecture that uses depthwise separable convolutions to build light weight deep neural networks. Furthermore, Professor Howard describes a set of two hyper-parameters in order to build very small, low latency models that can be easily matched to the design requirements for mobile and embedded vision applications. The effectiveness of MobileNets have been demonstrated across a wide range of applications and use cases as shown in Figure~\ref{fig1}, including object detection, finegrain classification, face attributes and large scale geo-localization.
+	\begin{figure*}[htbp!] 
+		\begin{center} 
+			\includegraphics[scale=0.7]{1.png} 
+			\caption{MobileNet models can be applied to various recognition tasks for efficient on device intelligence.}\label{fig1}  
+		\end{center}   
+	\end{figure*}
+	
+	\section{MobileNet Architecture}
+	The MobileNet model, mentioned in the paper, based on depthwise separable convolutions which is a form of factorized convolutions that factorize a standard convolution into a depthwise convolution and a $1\times 1$ convolution called a pointwise convolution. 
+	
+	A standard convolution both filters and combines inputs into a new set of outputs in one step. The depthwise separable convolution splits this into two layers, a separate layer for filtering and a separate layer for combining. This factorization has the effect of drastically reducing computation and model size. Figure~\ref{fig2} shows how a standard convolution 2(a) is factorized into a depthwise convolution 2(b) and a $1\times 1$ pointwise convolution 2(c).
+	\begin{figure}[htbp] 
+		\centering
+		\includegraphics[scale=0.7]{2.png} 
+		\caption{The standard convolutional filters in (a) are replaced by two layers: depthwise convolution in (b) and pointwise convolution in (c) to build a depthwise separable filter.}\label{fig2}  
+	\end{figure}
+
+    A standard convolutional layer takes as input a $D_F\times D_F\times M$ feature map $F$ and produces a $D_G\times D_G\times N$ feature map $G$ where $D_F$ is the spatial width and height of a square input feature map, $M$ is the number of input channels, $D_G$ is the spatial width and height of a square output feature map and $N$ is the number of output channel. Standard convolutions have the computational cost of as Equation~\ref{cost1}:
+	\begin{equation}
+    D_K \times D_K \times M \times N \times D_F \times D_F \label{cost1}
+    \end{equation}
+	where the computational cost depends multiplicatively on the number of input channels $M$, the number of output channels $N$ the kernel size $D_K\times D_K$ and the feature map size $D_F\times D_F$. MobileNet models address each of these terms and their interactions. First it uses depthwise separable convolutions to break the interaction between the number of output channels and the size of the kernel.
+	
+	Depthwise separable convolution has a computational cost of as Equation~\ref{cost2}:
+	\begin{equation}
+	D_K \times D_K \times M \times D_F \times D_F + M \times N \times D_F \times D_F     \label{cost2}
+	\end{equation}
+	
+	By expressing convolution as a two step process of filtering and combining they get a reduction in computation as Equation~\ref{combine}:
+	\begin{equation}
+	\begin{aligned}
+	\begin{split}
+	&\frac{D_K \times D_K \times M \times D_F \times D_F + M \times N \times D_F \times D_F}{D_K \times D_K \times M \times N \times D_F \times D_F} \\
+	&= \frac{1}{N} + \frac{1}{D_K^2}   \label{combine}
+	\end{split}
+	\end{aligned}
+	\end{equation}
+	
+	In order to construct these smaller and less computationally expensive models they introduce a very simple parameter called width multiplier. The computational cost of a depthwise separable convolution with width multiplier is as Equation~\ref{multiplier}:
+	\begin{equation}
+	D_K \times D_K \times \alpha M \times D_F \times D_F + \alpha M \times \alpha N \times D_F \times D_F     \label{multiplier}
+	\end{equation}
+	where $0<\alpha\le 1  $ with typical settings of 1, 0.75, 0.5 and 0.25. $\alpha = 1$ is the baseline MobileNet and $\alpha < 1$ are reduced MobileNets.
+	
+	The second hyper-parameter to reduce the computational cost of a neural network is a resolution multiplier $\rho$. They express the computational cost for the core layers of our network as depthwise separable convolutions with width multiplier $\alpha$and resolution multiplier $\rho$ Equation~\ref{core}:
+	\begin{equation}
+	D_K \times D_K \times \alpha M \times \rho D_F \times \rho D_F + \alpha M \times \alpha N \times \rho D_F \times \rho D_F    \label{core}
+	\end{equation}
+	where $0<\rho\le 1$ which is typically set implicitly so that the input resolution of the network is 224, 192, 160 or 128. $\rho = 1$ is the baseline MobileNet and $\rho < 1$  are reduced computation MobileNets. Resolution multiplier has the effect of reducing computational cost by $\rho ^2$.
+
+ \section{Evaluation of the Method}
+   Professor Howard trains PlaNet using the MobileNet architecture on the same data. While the full PlaNet model based on the Inception V3 architecture \cite{Szegedy2016Rethinking} has 52 million parameters and 5.74 billion mult-adds. The MobileNet model has only 13 million parameters with the usual 3 million for the body and 10 million for the final layer and 0.58 Million mult-adds. As shown in Tab.~\ref{Performance}, the MobileNet version delivers only slightly decreased performance compared to PlaNet despite being much more compact. Moreover, it still outperforms Im2GPS by a large margin.
+   \begin{table}[h]
+   	\centering
+   	\caption{Performance of PlaNet\cite{Weyand2016PlaNet} using the MobileNet architecture.Percentages are the fraction of the Im2GPS\cite{Choi2015Multimodal} test dataset that were localized within a certain distance from the ground truth. The numbers for the original PlaNet model are based on an updated version that has an improved architecture and training dataset.}\label{Performance}
+   	\begin{tabular}{|c|c|c|p{1.6cm}|}
+   		\hline
+   		Scale & Im2GPS & PlaNet& PlaNet MobileNet\\
+   		\hline
+   		Continent (2500 km)  &51.9\% &77.6\%& 79.3\%  \\
+   		\hline
+   		Country (750 km) &35.4\%&64.0\%&60.3\% \\
+   		\hline
+   		Region (200 km) &32.1\%&51.1\%& 45.2\%\\
+   		\hline
+   	    City (25 km)&21.9\%&31.7\%& 31.7\%\\
+   		\hline
+   		Street (1 km) &2.5\%&11.0\%& 11.4\%\\
+   		\hline
+   	\end{tabular}
+   \end{table}
+  
+\bibliography{1}
+	
+\end{document} 
