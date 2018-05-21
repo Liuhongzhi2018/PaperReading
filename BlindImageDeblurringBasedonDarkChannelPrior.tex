@@ -42,7 +42,7 @@
 	\end{split} 
 	\end{aligned}
 	\end{equation}
-	where the first term imposes that the convolution output of the recovered image and the blur kernel should be similar to the observation; the second term is used to regularize the solution of the blur kernel; the third term on image gradients retains large gradients and removes tiny details\cite{Pan2014Deblurring}; $\gamma$, $\mu$ and $\nabla$ are weight parameters. They use coordinate descent to alternatively solve for the latent image $I$ as Formulation~(\ref{coordinate}):
+	where the first term imposes that the convolution output of the recovered image and the blur kernel should be similar to the observation; the second term is used to regularize the solution of the blur kernel; the third term on image gradients retains large gradients and removes tiny details\cite{Pan2014Deblurring}; $\gamma$, $\mu$ and $\lambda$ are weight parameters. They use coordinate descent to alternatively solve for the latent image $I$ as Formulation~(\ref{coordinate}):
 	\begin{equation}
 	\begin{aligned}
 	\begin{split}
