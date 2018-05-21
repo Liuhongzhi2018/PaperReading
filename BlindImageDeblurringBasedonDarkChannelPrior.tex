@@ -1,0 +1,113 @@
+%!Mode::"Tex:UTF-8"
+\documentclass[twocolumn]{article}
+\bibliographystyle{unsrt}
+\usepackage{indentfirst}
+\usepackage{picinpar,graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\usepackage[colorlinks,linkcolor=red,citecolor=green]{hyperref}
+\DeclareMathOperator*{\argmax}{argmax}
+\setlength{\parindent}{2em}
+\author{Hongzhi Liu}
+\title{Blind Image Deblurring Based on Dark Channel Prior}
+
+\begin{document}
+	\maketitle
+	\par
+	\section{Overview of Blind Image Deblurring}
+	In the last decade, blind image deblurring has been an active research effort in the vision and graphics community. Besides, it is a classical image and signal processing problem which aims to recover a blur kernel and a sharp latent image from a blurred image. This problem becomes increasingly important nowadays because of fashion camera phones with which kinds of photos are taken. Camera shake is often inevitable and the resulting image blur is usually undesirable. Thus, it is of great importance to remove blur for a higher quality image.
+	
+	Professor Pan presents a simple and effective blind image deblurring method using dark channel prior in the thesis\cite{Pan2016Blind}. Their work is motivated by an interesting observation on the blur process that is dark channels of blurred images are less dark. Intuitively, when a dark pixel is averaged with neighboring high-intensity pixels during the blur process, its intensity increases. They show theoretically and empirically that this generic property of the blur process holds for many images. This inspires them to propose an $L_0$-regularization term to minimize the dark channel of the recovered image. The proposed algorithm converges quickly in practice and can be naturally extended to non-uniform deblurring tasks.
+
+	\section{A Model for Image Deblurring}	
+	To begin with, Professor Pan describes the dark channel and its role in image deblurring. For an image $I$, the dark channel\cite{He2011Single} is defined as Equation~(\ref{dark}):
+	\begin{equation}
+	D(I)(x)=\min_{y\in \mathcal{N}(x)}(\min_{c\in \{r,g,b\}}I^c(y))     \label{dark}
+	\end{equation}
+	where $x$ and $y$ denote pixel locations; $\mathcal{N}(x)$ is an image patch centered at $x$; and $I^c$ is the $c$-th color channel. If $I$ is a gray-scale image, we have $\min_{c\in\{r,g,b\}}I^c(y) = I(y)$. The dark channel prior is mainly used to describe the minimum values in an image patch. They find that most elements of the dark channel are zero for natural images as shown in Figure~\ref{fig1}(a) and (c). However, most elements in the dark channel of blurred images are nonzero as shown in Figure~\ref{fig1}(b) and (d).
+	\begin{figure}[htbp] 
+		\centering
+		\includegraphics[scale=0.5]{1.png} 
+		\caption{Blurred images have less sparse dark channels than clear images. The blur process (convolution) outputs a weighted average of pixels in a neighborhood and tends to increase the value of the minimum pixel.}\label{fig1}  
+	\end{figure}
+
+	From Professor Pan's analysis and observations, he uses the $\parallel D(I)\parallel_0$ norm to measure sparsity of dark channels. And he adds this constraint to a standard formulation for image deblurring as Equation~(\ref{formulation}):
+	\begin{equation}
+	\begin{aligned}
+	\begin{split}
+	\min_{I,k} \parallel I\otimes k-B \parallel_2^2+\gamma \parallel K \parallel_2^2 +\mu \parallel \nabla I\parallel_0+\lambda \parallel D(I) \parallel_0   \label{formulation}
+	\end{split} 
+	\end{aligned}
+	\end{equation}
+	where the first term imposes that the convolution output of the recovered image and the blur kernel should be similar to the observation; the second term is used to regularize the solution of the blur kernel; the third term on image gradients retains large gradients and removes tiny details\cite{Pan2014Deblurring}; $\gamma$, $\mu$ and $\nabla$ are weight parameters. They use coordinate descent to alternatively solve for the latent image $I$ as Formulation~(\ref{coordinate}):
+	\begin{equation}
+	\begin{aligned}
+	\begin{split}
+	\min_I,k\parallel I\otimes k-B \parallel_2^2+\mu \parallel \nabla I\parallel_0+\lambda \parallel D(I) \parallel_0    \label{coordinate}
+	\end{split}
+	\end{aligned}
+	\end{equation}
+	And the blur kernel $k$ as Formulation~(\ref{kernel}):
+	\begin{equation}
+	\begin{aligned}
+	\begin{split}
+	\min_k \parallel I\otimes k-B \parallel_2^2+\gamma \parallel K \parallel_2^2 \label{kernel}
+	\end{split}
+	\end{aligned}
+	\end{equation}
+
+	Then they introduce the auxiliary variables $u$ with respect to $D(I)$ and $g = (g_h, g_v)$ corresponding to image gradients in the horizontal and vertical directions. The objective Function~(\ref{coordinate}) can be rewritten as Function~(\ref{function}):
+	\begin{equation}
+	\begin{aligned}
+	\begin{split}
+	\min_{I,u,g} \parallel I\otimes k-B \parallel_2^2+&\alpha \parallel \nabla I-g \parallel_2^2+\beta \parallel D(I)-u \parallel_2^2 \\
+	&+\mu \parallel g\parallel_0+\lambda\parallel u\parallel_0     \label{function}
+	\end{split}
+	\end{aligned}
+	\end{equation}
+	where $\alpha$ and $\beta$ are penalty parameters.
+	
+	Their observation is that the non-linear operation $D(I)$ is equivalent
+	to a linear operator $M$ applied to the vectorized image $I$. Let $y=\arg \min_{z\in\mathcal{N}(x)}I(z)$. $M$ satisfies as Equation~(\ref{M}):
+	\begin{equation}
+	M(x,z)=
+	\begin{cases}
+	1, & \mbox{if} \quad z=y, \\
+	0, & \mbox{otherwise}.
+	\end{cases}      \label{M}
+	\end{equation}
+	Given the previous estimated intermediate latent image, we can construct the desired matrix $M$ according to (\ref{M}), as shown in Figure~\ref{fig2}.
+	\begin{figure}[htbp] 
+		\centering
+		\includegraphics[scale=0.4]{2.png} 
+		\caption{Top: computing the dark channel $D(I)$ of an image $I$ by the non-linear min operator is equivalent to multiplying a linear selection matrix $M$ with the vectorized image $I$. The three squares in the intermediate image denote adjacent image patches for computing the dark channel, where the minimum intensity value in each patch is marked with different colors. Bottom: the transpose $M^T$ enforces identified dark pixels to be consistent with $u$.}\label{fig2}  
+	\end{figure}
+	Finally, they estimate the blur kernel $k$ as Function~(\ref{estiamte}):
+	\begin{equation}
+	\begin{aligned}
+	\begin{split}
+	\min_k \parallel \nabla I\otimes k-\nabla B \parallel_2^2+\gamma \parallel K \parallel_2^2 \label{estiamte}
+	\end{split}
+	\end{aligned}
+	\end{equation}
+
+ \section{Evaluation of the Method}
+   Table~\ref{Quantitative} summarizes the PSNR results on the text image dataset\cite{Pan2014Deblurring}, which contains 15 clear text images and 8 blur kernels. The average PSNR by their method is at least 1.7dB higher than those by other natural image deblurring methods and less than 0.9dB lower than that by the specially-designed method.
+   \begin{table}[h]
+   	\centering
+   	\caption{Quantitative evaluations on the text image dataset\cite{Pan2014Deblurring}. Their method outperforms several recent deblurring methods for natural images and is comparable to the method designed for text images.}\label{Quantitative}
+   	\begin{tabular}{|p{1cm}|c|c|c|c|}
+   		\hline
+   		& Cho and Lee& Xu and Jia & Pan\cite{Pan2014Deblurring}& theirs\\
+   		\hline
+   		Average PSNRs  &23.80 &26.21& 28.80 &27.94\\
+   		\hline
+   	\end{tabular}
+   \end{table}
+  
+\bibliography{1}
+	
+\end{document} 
