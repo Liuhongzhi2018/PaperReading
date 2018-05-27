@@ -57,7 +57,7 @@ L*=L+(N-1)S.     \label{between}
 \end{equation}
 The compactness along spatial dimension is $\frac{LM*N}{L*M*}\thickapprox \frac{L}{S}$. Note that since the minimal value of $S$ is 1, the minimal value of $L*$ (\emph{i.e.} the minimum spatial length of the condensed filter) is $L+N-1$ and the maximal achievable compactness is therefore $L$.
 
-To eliminate such redundancy in convolution and speed-up WSNet, Dr. Yang proposes a novel integral image method to enable efficient computation via sharing computations. They first calculate an inner product map $P\in \mathbb{R}^{T\times L*}$ which stores the inner products between each row vector in the input feature map (\emph{i.e.} $F$) and each column vector in the condensed filter (\emph{i.e.} $Phi$) as Equation~(\ref{novel}):
+To eliminate such redundancy in convolution and speed-up WSNet, Dr. Yang proposes a novel integral image method to enable efficient computation via sharing computations. They first calculate an inner product map $P\in \mathbb{R}^{T\times L*}$ which stores the inner products between each row vector in the input feature map (\emph{i.e.} $F$) and each column vector in the condensed filter (\emph{i.e.} $\Phi$) as Equation~(\ref{novel}):
 \begin{equation}
 P(u,v)=
 \begin{cases}
