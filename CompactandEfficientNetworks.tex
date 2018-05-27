@@ -24,7 +24,7 @@
 \title{Compact and Efficient Networks Through Weight Sampling}
 
 \author{Hongzhi Liu\\\\
-May 27, 2018}
+May 28, 2018}
 
 \begin{document}
 %%%%%%%%% TITLE
@@ -40,7 +40,7 @@ May 27, 2018}
 
 Deep neural networks (DNNs) usually suffer following two problems that stem from their inherent huge parameter space despite remarkable successes in various applications. One is over-fitting and the other is large amount of storage memory and energy consuming. Existing approaches learn model parameters independently, and when needed, apply different ways of model compression to reduce model size which lead to large performance drop.
 
-In this paper, Dr. Yang proposes a Weight Sampling deep neural network (\emph{i.e.} WSNet) to significantly reduce both the model size and computation cost \cite{DBLP:journals/corr/abs-1711-10067}, achieving better performance than the baseline (\emph{i.e.} conventional networks that learn filters independently). Alternatively, WSNet can learn model parameters by sampling from a compact set of learnable parameters, which naturally enforces parameter sharing throughout the learning process. they demonstrate that such a novel weight sampling approach promotes both weights and computation sharing favorably. By employing this method, the team can more efficiently learn much smaller networks with competitive performance compared to baseline networks with equal numbers of convolution filters.
+In this paper, Dr. Yang proposes a Weight Sampling deep neural network (\emph{i.e.} WSNet) to significantly reduce both the model size and computation cost \cite{DBLP}, achieving better performance than the baseline (\emph{i.e.} conventional networks that learn filters independently). Alternatively, WSNet can learn model parameters by sampling from a compact set of learnable parameters, which naturally enforces parameter sharing throughout the learning process. they demonstrate that such a novel weight sampling approach promotes both weights and computation sharing favorably. By employing this method, the team can more efficiently learn much smaller networks with competitive performance compared to baseline networks with equal numbers of convolution filters.
 
 %------------------------------------------------------------------------
 \section{Method of Weight Sampling}
@@ -99,7 +99,7 @@ Finally, the team note that the integral image method applied in WSNet naturally
 
 \section{Experimental Results of WSNet on 2D CNNs}
 
-Since both WSNet and HashNet \cite{DBLP:journals/corr/ChenWTWC15} explore weights tying, Dr. Yang compares them on MNIST and CIFAR10. For fair comparison, the team use the same baselines used in \cite{Chen2016Compressing}. For each dataset, they hold out 20\% of training samples to form a validation set. 
+Since both WSNet and HashNet \cite{DBLP1} explore weights tying, Dr. Yang compares them on MNIST and CIFAR10. For fair comparison, the team use the same baselines used in \cite{Chen2016Compressing}. For each dataset, they hold out 20\% of training samples to form a validation set. 
 
 The comparison results between WSNet and HashNet on MNIST/CIFAR10 are listed in Table~\ref{Test}, from which one can observe that when learning networks with the same sizes, WSNet achieves significantly lower error rates than HashNet on both datasets. Above results clearly demonstrate the advantages of WSNet in learning compact models.
 
