@@ -92,7 +92,7 @@ The team demonstrates the effectiveness of the framework in experiments.We teste
 In Table~\ref{Com}, Dai compares A1, A2, S, A1S, A1SC, A1SD, A2SD and A2SDF. However, CRF is not able to effectively exploit them. With the use of DR-Net, the performance gains are significant. The team evaluate the perplexities of the predictions for our model with and without DR-Net, which are 2.64 and 3.08. These results show the benefit of exploiting statistical dependencies for joint recognition.
 
 \begin{table*}[tp]
-	\label{tb1}
+	\caption{Comparison of different variants of the proposed method, using \emph{Recall}@50 as the metric.} \label{Com}
 	\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
 		   &  & $A_1$ & $A_2$ & $S$  & $A_1S$ & $A_1SC$ & $A_1SD$ & $A_2SD$ & $A_2SDF$ \\
 		   \hline
@@ -104,7 +104,6 @@ In Table~\ref{Com}, Dai compares A1, A2, S, A1S, A1SC, A1SD, A2SD and A2SDF. How
 		& Union Box Detection & 13.24 & 13.84 & 14.01  & 16.04 & 16.08 & 20.21 & 20.28 & 23.95 \\
 		& Two Boxes Detection & 11.35 & 11.98 & 12.07  & 13.77 & 13.81 & 17.42 & 17.51 & 20.79 \\	
 	\end{tabular}
-	\caption{Comparison of different variants of the proposed method, using \emph{Recall}@50 as the metric.} \label{Com}
 \end{table*}
 
 {\small
