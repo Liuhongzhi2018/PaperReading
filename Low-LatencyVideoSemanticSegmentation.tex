@@ -1,0 +1,116 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\usepackage{times}
+\usepackage{multirow}
+\setmainfont{Times New Roman}
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+\usepackage{stfloats}
+\usepackage[pagebackref=true,colorlinks,linkcolor=red,citecolor=green,breaklinks=true,bookmarks=false]{hyperref}
+\cvprfinalcopy % *** Uncomment this line for the final submission
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ifcvprfinal\pagestyle{empty}\fi
+\setcounter{page}{1}
+\title{Low-Latency Video Semantic Segmentation}
+\author{Hongzhi Liu\\\\
+Jun 2, 2018}
+
+\begin{document}
+%%%%%%%%% TITLE
+\maketitle
+%\thispagestyle{empty}
+\begin{abstract}
+	As is known to all, autonomous driving has become a hot topic for people in recent years and there is still a long way for the smart car to really go on the road. Fortunately, we have made some breakthroughs in some areas. Today, I read a thesis written by Yule Li, who is from Key Laboratory of Intelligent Information Processing of Chinese Academy of Sciences. His team develop a framework for video semantic segmentation to tackle the combined challenge that applying segmentation techniques to video-based applications. The proposed framework obtained competitive performance compared to the state of the art.
+
+\end{abstract}
+%%%%%%%%% BODY TEXT
+\section{Overview of Video Segmentation Framework}
+
+Semantic segmentation is a task to divide observed scenes into semantic regions, having been an active research topic in computer vision. The advances in deep learning \cite{Krizhevsky2012ImageNet}  and in particular the development of Fully Convolutional Network (FCN) \cite{Long2015Fully} have brought the performance of this task to a new level. The challenges of video-based semantic segmentation consist in two aspects. On one hand, videos usually involve significantly larger volume of data compared to images. And on the other hand, many real-world systems that need video segmentation. Previous efforts on video semantic segmentation mainly fall into two classes, namely \emph{high-level modeling} and \emph{feature-level propagation}. The former \cite{fayyaz2016stfcn} integrates frame-wise analysis via a sequential model but are unable to reduce the computing cost. The latter attempts to reuse the features in preceding frames to accelerate computation. However, it lacks the flexibility of handling complex variations.
+
+In the paper, Yule Li and his team present a framework that achieves low-latency video segmentation \cite{li2018low} in which they introduce two new components that are a network using spatially variant convolution to propagate features adaptively and an adaptive scheduler to reduce the overall computing cost and ensure low latency. This way not only leads to more efficient use of computational resources but also reduce the maximum latency.
+
+%------------------------------------------------------------------------
+\section{Video Segmentation Framework}
+
+Previous works usually select key frames based on fixed intervals \cite{Zhu2017Deep} or simple heuristics \cite{shelhamer2016clockwork}, and propagate features based on optical flows that are costly to compute or CNNs with fixed kernels. Such methods often lack the capability of handling complex variations in videos. Hence, Li and his team try to select key frames and propagate features more effectively by exploiting the information contained in the low-level features, while maintaining a relatively low computing cost. 
+
+\subsection{Overall Pipeline of the Framework}
+
+The team use a deep convolutional network (ResNet101 \cite{he2016deep} in their implementation) to extract visual features from frames. They divide the network into two parts, the lower part $S_l$ and the higher-part $S_h$. The low-level features derived from $S_l$ will be used for selecting key frames and controlling how high-level features are propagated. Fig.~\ref{fig:1} shows the overall pipeline of our framework.
+
+When at runtime, the framework will feed the first frame $I_0$ through the entire CNN and obtain both low-level and high-level features to initialize the entire procedure. At a later time step $t$, it performs the computation adaptively. In particular, it first feeds the corresponding frame $I^t$ to $S_l$, and computes the low-level features $F_l^t$. Based on $F_l^t$, it decides whether to treat It as a new key frame, depending on how much it deviates from the previous one. If the decision is yes, it will continue to feed $F_l^t$ to $S_h$ to compute the high-level features $F_h^t$ , and then the segmentation map. Otherwise, it will feed $F_l^t$ to a \emph{kernel predictor}, obtain a set of convolution kernels therefrom, and use them to propagate the high-level features from the previous key frame via spatially variant convolution.
+
+\begin{figure*}
+	\begin{center}
+		\includegraphics[scale=0.5,width=1\linewidth]{1.png}
+	\end{center}
+	\caption{The overall pipeline. At each time step $t$, the lower-part of the CNN $S_l$ first computes the low-level features $F_l^t$. Based on both $F_l^k$ (the low-level features of the previous key frame) and $F_l^t$, the framework will decide whether to set $I^t$ as a new key frame. If yes, the high-level features $F_h^t$ will be computed based on the expensive higher-part $S_h$; otherwise, they will be derived by propagating from $F_h^k$ using spatially variant convolution. The high-level features, obtained in either way, will be used in predicting semantic labels.}
+	\label{fig:1}
+\end{figure*}
+
+\subsection{Adaptive Selection of Key Frames}
+
+An important step in Li's pipeline which is mentioned above is to decide which frames are the key frames. A good strategy is to select key frames more frequently when the video is experiencing rapid changes, while reducing the computation when the observed scene is stable. According to the rationale above, a natural criterion for judging whether a frame should be chosen as a new key frame is the deviation of its segmentation map from that of the previous key frame.
+
+Motivated by the observation that strong correlation exists between features and the values, the team devise a small neural network to make the prediction. Let $k$ and $t$ be the indexes of two frames, this network takes the differences between their low-level features. Specifically, their design of this prediction network comprises two convolutional kernels with 256 channels, a global pooling and a fully-connected layer that follows. In runtime, at time step $t$, Li uses this network to predict the deviation from the previous key frame, after the low-level features are extracted. As shown in Fig.~\ref{fig:2}, they observed that the predicted deviation would generally increases over time. If the predicted deviation goes beyond a pre-defined threshold, we set the current frame as a key frame, and computes its highlevel features with $S_h$, the higher part of the CNN.
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5,width=1\linewidth]{2.png}
+	\end{center}
+	\caption{Adaptive key frame selection. As we proceed further away from the key frame, the predicted deviation of the segmentation map, depicted with blue dots, gradually increases. In Li's scheme, when the deviation goes beyond a pre-defined threshold, the current frame will be selected as a new key frame.}
+	\label{fig:2}
+\end{figure}
+
+\subsection{Adaptive Feature Propagation}
+
+The team propose to propagate the features by spatially variant convolution, that is, using convolution to express linear combinations of neighbors, with the kernels varying across sites. Let the size of the kernels be $H_K\times H_K$, then the propagation from the high-level features of the previous key frame ($F_h^k$) to that of the current frame ($F_h^k$) can be expressed as Equation~\ref{propagation}:
+\begin{equation}
+F_h^t(l,i,j)=\sum_{u=-\Delta}^{\Delta}\sum_{v=-\Delta}^{\Delta}W_{ij}^{(k,t)}(u,v)\centerdot F_h^k(l,i-u,j-v).     \label{propagation}
+\end{equation}
+Here, $\Delta=[H_K/2]$, $F_h^t(l,i,j)$ is the feature value at $(i;j)$ of the $l$-th channel in $F_h^t$, $W_{ij}^{(k,t)}$ is an $H\times H$ kernel used to compute the feature at $(i;j)$ when propagating from $F_h^k$ to $F_h^t$. Note that the kernel values are to assign weights to different neighbors, which are dependent on the feature location $(i;j)$ but shared across all channels.
+
+To increase the robustness against scene changes, we fuse the low-level features $F_l^t$ with the propagated high level feature $F_h^t$ for predicting the labels. The AdaptNet is jointly learned with the weight predictor in model training. In this way, the framework can learn to exploit the complementary natures of both components more effectively.
+
+\subsection{Low-Latency Scheduling}
+
+Based on the framework presented above, the team devise a new scheduling scheme that can substantially reduce the maximum latency. The key of our approach is to introduce a fast track at key frames. Specifically, when a frame It is decided to be a key frame, this scheme will compute the segmentation of this frame through the fast track, \emph{i.e.} via feature propagation. The high-level features resulted from the fast track are temporarily treated as the new key frame feature and placed in the cache. In the mean time, a background process is launched to compute the more accurate version of $F_h^t$ via the slow track $S_h$, without blocking the main procedure. When the computation is done, this version will replace the cached features.
+
+\section{Experimental Results of Framework}
+
+Li evaluates their framework on Cityscapes \cite{cordts2016cityscapes} and the method outperforms previous methods significantly with lowest latency. The team compared their low-latency video semantic segmentation framework with recent state-of-the-art methods, following their evaluation protocol. Table~\ref{Com} shows the quantitative comparison. 
+
+From the results, we can see that other methods proposed recently fall short in certain aspects. In particular, Clockwork Net \cite{shelhamer2016clockwork} has the same latency, but at the cost of significantly dropped performance. DFF \cite{Zhu2017Deep} maintains a better performance, but at the expense of considerably increased computing cost and dramatically larger latency. Their final result, with low latency schedule for video segmentation, outperforms previous methods by a large margin. This validates the effectiveness of our entire design.
+
+\begin{table}[tp]
+	\caption{Comparison with state-of-the-art on Cityscapes dataset.} \label{Com}
+	\begin{tabular}{c|c|c|c}
+		   \hline
+		   Method & mIOU & Avg RT& Latency \\
+		   \hline
+		   Clockwork Net \cite{shelhamer2016clockwork} & 67.7\% & 141ms& 360ms \\
+		   Deep Fea. Flow \cite{Zhu2017Deep} & 70.1\% & 273ms& 654ms \\
+		   GRFP(5) \cite{nilsson2016semantic} & 69.4\% & 470ms& 470ms \\
+		   \hline
+		   baseline & 80.2\% & 360ms& 360ms \\
+		   AFP + fix schedule & 75.26\% & 151ms& 360ms \\
+		   AFP + AKS & 76.84\% & 171ms& 380ms \\
+		   AFP + AKS + LLS & 75.89\% & 119ms& 119ms \\
+		   \hline
+	\end{tabular}
+\end{table}
+
+{\small
+\bibliographystyle{ieee}
+\bibliography{egbib}
+}
+
+\end{document}
