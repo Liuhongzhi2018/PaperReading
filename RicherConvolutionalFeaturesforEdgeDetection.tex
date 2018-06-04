@@ -81,7 +81,7 @@ in which
 
 When $Y^+$ and $Y^-$ denote positive sample set and negative sample set respectively. The hyper-parameter $\lambda$ is to balance positive and negative samples. The activation value and ground truth edge probability at pixel $i$ are presented by $X_i$ and $y_i$, respectively. $P(X)$ is the standard sigmoid function, and $W$ denotes all the parameters that will be learned in their architecture. Therefore, the improved loss function can be formulated as Equation~\ref{loss}:
 \begin{equation}
-L(W)=\sum_{i=1}^{|I|}(\sum_{k=1}^{K}l(X_i^{(k)};W)+l(X_i^{fuse};W)  \label{loss}
+L(W)=\sum_{i=1}^{|I|}(\sum_{k=1}^{K}l(X_i^{(k)};W)+l(X_i^{fuse};W))  \label{loss}
 \end{equation}
 where $X_i^{k}$ is the activation value from stage $k$ while $X_i^{fuse}$ is from fusion layer. $|I|$ is the number of pixels in image $I$, and $K$ is the number of stages.
 
