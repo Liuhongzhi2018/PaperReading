@@ -34,26 +34,26 @@ Jun 6, 2018}
 \section{Overview of the Framework}
 The goal in salient object detection is to identify the most visually distinctive objects or regions in an image. Salient object detection methods commonly serve as the first step for a variety of computer vision applications. Inspired by cognitive studies of visual attention, computational saliency detection has received great research attention in the past two decades. The Holistically-Nested Edge Detector (HED) \cite{Saining2015Holistically} model, which explicitly deals with the scale space problem, has lead to large improvements over generic FCN models in the context of edge detection. However, the skip-layer structure with deep supervision in the HED model does not lead to obvious performance gain for saliency detection.
 
-As demonstrated in Fig.\ref{fig:1}, Dr. Cheng observes that deeper side outputs encodes high level knowledge and can better locate salient objects and shallower side outputs capture rich spatial information. This motivated him to develop a new method for salient object detection by introducing short connections to the skip-layer structure within the HED architecture. By having a series of short connections from deeper side outputs to shallower ones, our new framework offers two advantages mentioned in the paper \cite{Hou2016Deeply}. One is that high-level features can be transformed to shallower side-output layers. And the other one is that shallower side-output layers can learn rich low-level features.
+As demonstrated in Fig.~\ref{fig:1}, Dr. Cheng observes that deeper side outputs encodes high level knowledge and can better locate salient objects and shallower side outputs capture rich spatial information. This motivated him to develop a new method for salient object detection by introducing short connections to the skip-layer structure within the HED architecture. By having a series of short connections from deeper side outputs to shallower ones, their new framework offers two advantages mentioned in the paper \cite{Hou2016Deeply}. One is that high-level features can be transformed to shallower side-output layers. And the other is that shallower side-output layers can learn rich low-level features.
 \begin{figure*}
 	\begin{center}
 		\includegraphics[scale=0.5,width=1\linewidth]{1.png}
 	\end{center}
-	\caption{Visual comparison of saliency maps produced by the HED-based method and ours. Though saliency maps produced by deeper (4-6) side output (s-out) look similar, because of the introduced short connections, each shallower (1-3) side output can generate satisfactory saliency maps and hence a better output result.}
+	\caption{Visual comparison of saliency maps produced by the HED-based method and theirs. Though saliency maps produced by deeper side output look similar, because of the introduced short connections, each shallower side output can generate satisfactory saliency maps and hence a better output result.}
 	\label{fig:1}
 \end{figure*}
 
 %------------------------------------------------------------------------
 \section{Deep Supervision with Short Connections}
 
-As pointed out in most previous works, a good salient object detection network should be deep enough such that multi-level features can be learned. Further, it should have multiple stages with different strides so as to learn more inherent features from different scales.
+As pointed out in most previous works, a good salient object detection network should be deep enough such that multi-level features can be learned. Besides, it should have multiple stages with different strides so as to learn more inherent features from different scales.
 
 \subsection{HED-based saliency detection}
 The team propose a top-down method to reasonably combine both low-level and high-level features for accurate saliency detection. They shall start out with the standard HED architecture as well as its extended version, a special case of this work, for salient object detection and gradually move on to the proposed architecture. The side objective function of HED can be given by as Equation~\ref{fun}:
 \begin{equation}
 L_{side}(W,w)=\sum_{m=1}^{M}\alpha_ml_{side}^{(m)}(W,w^{(m)}),  \label{fun} 
 \end{equation}
-where $\alpha_m$ is the weight of the $m$th side loss and $l_{side}^{(m)}$ side denotes the image-level class-balanced cross-entropy loss function for the mth side output. Besides, a weightedfusion layer is added to better capture the advantage of each side output. The fusion loss at the fusion layer can be expressed as Equation~\ref{fuse}:
+where $\alpha_m$ is the weight of the $m$th side loss and $l_{side}^{(m)}$ side denotes the image-level class-balanced cross-entropy loss function for the $m$th side output. Besides, a weighted fusion layer is added to better capture the advantage of each side output. The fusion loss at the fusion layer can be expressed as Equation~\ref{fuse}:
 \begin{equation}
 L_{fuse}(W,w,f)=\sigma(Z,h(\sum_{m=1}^{M}f_mA_{side}^{(m)})), \label{fuse} 
 \end{equation}
@@ -83,11 +83,11 @@ HED connects each side output to the last convolutional layer in each stage of t
 
 \subsection{Short Connections}
 
-Our approach is based on the observation that deeper side outputs are capable of finding the location of salient regions but at the expense of the loss of details, while shallower ones focus on low-level features but are short of global information. These phenomenons inspire us to utilize the following way to appropriately combine different side outputs such that the most visually distinctive objects can be extracted.
+Their approach is based on the observation that deeper side outputs are capable of finding the location of salient regions but at the expense of the loss of details, while shallower ones focus on low-level features but are short of global information. These phenomenons inspire them to utilize the following way to appropriately combine different side outputs such that the most visually distinctive objects can be extracted.
 
 \section{Experimental Results of the Method}
 
-The team's experiment with different design options and different short connection patterns to illustrate the effectiveness of each component of our method. The performance is listed in Table\ref{Com}. As can be seen from Table\ref{Com}, with the increase of short connections, their approach gradually achieves better performance.
+The team's experiment with different design options and different short connection patterns to illustrate the effectiveness of each component of our method. The performance is listed in Table~\ref{Com}. As can be seen from Table~\ref{Com}, with the increase of short connections, their approach gradually achieves better performance.
 
 
 
