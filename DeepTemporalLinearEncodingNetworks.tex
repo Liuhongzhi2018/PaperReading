@@ -1,0 +1,118 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\usepackage{times}
+\usepackage{multirow}
+\setmainfont{Times New Roman}
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+\usepackage{stfloats}
+\usepackage[pagebackref=true,colorlinks,linkcolor=red,citecolor=green,breaklinks=true,bookmarks=false]{hyperref}
+\cvprfinalcopy % *** Uncomment this line for the final submission
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ifcvprfinal\pagestyle{empty}\fi
+\setcounter{page}{1}
+\title{Deep Temporal Linear Encoding Networks}
+\author{Hongzhi Liu\\\\
+Jun 8, 2018}
+
+\begin{document}
+%%%%%%%%% TITLE
+\maketitle
+%\thispagestyle{empty}
+\begin{abstract}
+	Nowadays, human action recognition in videos has attracted quite some attention, due to the potential applications in video surveillance, behavior analysis and video retrieval. The CNN-encoding of features from entire videos for the representation of human actions has rarely been addressed. Instead, CNN work has focused on approaches to fuse spatial and temporal networks, but these were typically limited to processing shorter sequences. Today, I read a thesis written by Vivek Sharma, who is from University of Leuven. His team propose a new video representation, called temporal linear encoding (TLE) and embedded inside of CNNs as a new layer, which captures the appearance and motion throughout entire videos. It encodes this aggregated information into a robust video feature representation, via end-to-end learning. The experiments show that TLE outperforms current state-of-the-art methods on both datasets.
+\end{abstract}
+%%%%%%%%% BODY TEXT
+\section{Overview of Video Representation}
+
+Over the last two decades, several action recognition techniques in videos have been proposed by the vision community. The performance of computer vision systems still falls behind that of people even if considerable progress was made. On top of the challenges that make object class recognition hard, there are issues like camera motion and the continously changing viewpoints that come with it. Whereas Convolutional Networks have caused several sub-fields of vision to leap forward, they still lack the capacity to exploit long-range temporal information. Neural networks for action recognition can be categorized into two types, namely \emph{one-stream} ConvNets \cite{karpathy2014large} and \emph{two-stream} ConvNets \cite{simonyan2014two}. 
+
+As to the \emph{one-stream} ConvNets, spatial networks perform action recognition from individual video frames. They lack any form of motion modeling. Besides, temporal networks typically get their motion information from dense optical flow. This reliance on dense temporal sampling leads to excessive computational costs for longer videos. The \emph{two-stream} ConvNets have shown to outperform \emph{one-stream} ConvNets. They exploit fusion techniques like trajectory-constrained pooling and consensus pooling \cite{wang2016temporal}. The fusion methods of spatial and motion information lie at the heart of the state-of-the-art \emph{two-stream} ConvNets.
+
+Motivated by the above observations, Sharma proposes the new spatio-temporal encoding \cite{diba2017deep} illustrated in Fig.~\ref{fig:1}. The design of the spatio-temporal deep feature encoding aims to aggregate multiple video segments over longer time ranges. To that end, the team use their temporal linear encoding (TLE), which is inspired by previous works on video representations \cite{wang2013action} and feature encoding methods. TLE is a form of temporal aggregation of features sparsely sampled over the whole video using feature map aggregation techniques and then projected to a lower dimensional feature space using encoding methods powered by end-to-end learning of deep networks.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5,width=1\linewidth]{1.png}
+	\end{center}
+	\caption{Temporal linear encoding for video classification. Given several segments of an entire video, be it either a number of frames or a number of clips, the model builds a compact video representation from the spatial and temporal cues they contain, through end-to-end learning. The ConvNets applied to different segments share the same weights.}
+	\label{fig:1}
+\end{figure}
+
+%------------------------------------------------------------------------
+\section{Deep Temporal Linear Encoding}
+
+In a video, the motion between consecutive frames tends to be small. This suggests that the team need a video representation that encodes all the frames together, in order to also capture long-range dynamics. Their goal is to create a single feature space in which to represent each video using all its selected frames or clips, rather than scoring separate frames with classifiers and label the video based on scores aggregation. They propose temporal linear encoding (TLE) to aggregate spatial and temporal information from an entire video and to encode it into a robust and compact representation using end-to-end learning as shown in Fig.~\ref{fig:2}.
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5,width=1\linewidth]{2.png}
+	\end{center}
+	\caption{The temporal linear encoding applied to the design of two-stream ConvNets \cite{simonyan2014two}: spatial and temporal networks. The spatial network operates on RGB frames and the temporal network operates on optical flow fields.}
+	\label{fig:2}
+\end{figure}
+
+Consider the output feature maps of CNNs truncated at a convolutional layer for $K$ segments extracted from a video $V$. The feature maps are matrices ${S1, S2,\dots, S_K}$ of size $S\in \mathbb{R}^{h\times w\times c}$, where $h$, $w$and $c$ denote the height, width, and number of channels of the CNN feature maps. A temporal aggregation function $T$: $S1, S2,\dots, S_K\rightarrow X$, aggregates $K$ temporal feature maps to output an encoded feature map $X$.
+
+A bilinear model \cite{lin2015bilinear} computes the outer product of two feature maps as Equation~\ref{model}:
+\begin{equation}
+y=W[X\otimes X^\prime].  \label{model} 
+\end{equation}
+Where $X\in \mathbb{R}^{(hw)\times c}$, $X^\prime \in \mathbb{R}^{(hw)\times c^\prime}$ are input featuremaps, $y\in \mathbb{R}^{c\times c^\prime}$ are bilinear features, $\otimes$ denotes the outer product, $[\quad]$ turns the matrix into a vector byconcatenating the columns, and $W$ represents model parameters to be learned (here linear). In their case, $X=X^\prime$. The resulting bilinear features capture theinteraction of features with each other at all spatial locations,hence leading to a high-dimensional representation.
+
+Compared to the fully-connected pooling method, bilinear models projects the high dimensional feature space to a lower dimensional space, which is far fewer in parameters and still perform better than fully-connected layers in performance, apart from computational efficiency.
+
+One can readily employ other encoding methods like deep fisher encoding or VLAD, instead of bilinear models or fully connected pooling. When bilinear models are used the features are passed through a signed squared root and L2-normalization. In either case, the team use softmax as a classifier.
+
+\section{Evaluation of TLE}
+
+The team explore not only different aggregation functions to linearly aggregate the segments into a compact intermediate representation for encoding but also different ConvNet architectures for both two-stream. For this evaluation, they report the accuracy of split1 on UCF101 and HMDB51. The reported performance is for TLE with bilinear models using the tensor sketch algorithm.
+
+\begin{table}[tp]
+\caption{Accuracy (\%) performance comparison of the aggregation functions in TLE BN-Inception network for two-stream ConvNets using 3 segments on UCF101 and HMDB51 datasets.} \label{t1}
+\begin{center}
+	\begin{tabular}{|c|c|}
+		\hline
+		Aggregation Function & UCF101/HMDB51\\
+		\hline
+		Element-wise Maximum & 91.3/67.4 \\
+		Element-wise Average & 92.6/68.1  \\
+		Element-wise Multiplication  & 94.8/70.4 \\
+		\hline
+	\end{tabular}
+\end{center}
+\end{table}
+
+\begin{table}
+	\caption{Different architecture accuracy (\%) performance comparison of spatial and temporal ConvNets using 3 segments on the UCF101 and HMDB51 datasets.}\label{t2}
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			& UCF101/HMDB51 & UCF101/HMDB51 \\
+			\hline
+			Method & Spatial ConvNets  & Temporal ConvNets \\
+			AlexNet & 74.4/50.8  & 82.7/52.4 \\
+			VGG-16   & 81.5/60.9  & 86.8/61.5 \\
+			BN-Inception & 86.9/63.2  & 89.1/66.4 \\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+Sharma reports the performance of the different aggregation strategies in Table~\ref{t1}. He observes that the element-wise multiplication performs the best. Therefore, they choose element-wise multiplication as a default aggregation function. They believe combining the feature maps in this way allows them to aggregate the appearance and motion information accurately, hence leading to better results. 
+
+Furthermore, the team compare the different ConvNet architectures for TLE. Specifically, they compare AlexNet \cite{krizhevsky2012imagenet}, VGG-16 \cite{simonyan2014very}, and BNInception \cite{ioffe2015batch}. Among all architectures shown in Table~\ref{t2}, BN-Inception achieves the best performance, better than the AlexNet and VGG-16 architectures. BN-Inception is 5.4/2.3\% (spatial ConvNets) and 2.3/4.9\% (temporal ConvNets) better than VGG-16 on UCF101/HMDB51. Therefore, they choose BN-Inception as a default ConvNet architecture for TLE.
+
+{\small
+\bibliographystyle{ieee}
+\bibliography{egbib}
+}
+
+\end{document}
