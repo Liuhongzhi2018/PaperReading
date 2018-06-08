@@ -59,9 +59,9 @@ In a video, the motion between consecutive frames tends to be small. This sugges
 	\label{fig:2}
 \end{figure}
 
-Consider the output feature maps of CNNs truncated at a convolutional layer for $K$ segments extracted from a video $V$. The feature maps are matrices ${S1, S2,\dots, S_K}$ of size $S\in \mathbb{R}^{h\times w\times c}$, where $h$, $w$and $c$ denote the height, width, and number of channels of the CNN feature maps. A temporal aggregation function $T$: $S1, S2,\dots, S_K\rightarrow X$, aggregates $K$ temporal feature maps to output an encoded feature map $X$.
+Consider the output feature maps of CNNs truncated at a convolutional layer for $K$ segments extracted from a video $V$. The feature maps are matrices ${S1, S2,\dots, S_K}$ of size $S\in \mathbb{R}^{h\times w\times c}$, where $h$, $w$ and $c$ denote the height, width, and number of channels of the CNN feature maps. A temporal aggregation function $T$: $S1, S2,\dots, S_K\rightarrow X$, aggregates $K$ temporal feature maps to output an encoded feature map $X$.
 
-A bilinear model \cite{lin2015bilinear} computes the outer product of two feature maps as Equation~\ref{model}:
+A bilinear model computes the outer product of two feature maps as Equation~\ref{model}:
 \begin{equation}
 y=W[X\otimes X^\prime].  \label{model} 
 \end{equation}
