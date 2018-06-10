@@ -1,0 +1,144 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\usepackage{times}
+\usepackage{multirow}
+\setmainfont{Times New Roman}
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+\usepackage{stfloats}
+\usepackage[pagebackref=true,colorlinks,linkcolor=red,citecolor=green,breaklinks=true,bookmarks=false]{hyperref}
+\cvprfinalcopy % *** Uncomment this line for the final submission
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ifcvprfinal\pagestyle{empty}\fi
+\setcounter{page}{1}
+\title{ShuffleNet for Mobile Devices}
+\author{Hongzhi Liu\\\\
+Jun 10, 2018}
+
+\begin{document}
+%%%%%%%%% TITLE
+\maketitle
+%\thispagestyle{empty}
+\begin{abstract}
+	Building deeper and larger convolutional neural networks (CNNs) is a primary trend for solving major visual recognition tasks. The most accurate CNNs usually have hundreds of layers and thousands of channels, thus requiring computation at billions of FLOPs. Today, I read a thesis written by Xiangyu Zhang, who is from Megvii Inc (Face++). His team introduce an extremely computation-efficient CNN architecture named ShuffleNet which is designed specially for mobile devices with very limited computing power. The new architecture utilizes two new operations, pointwise group convolution and channel shuffle to greatly reduce computation cost while maintaining accuracy.
+\end{abstract}
+%%%%%%%%% BODY TEXT
+\section{Overview of ShuffleNet}
+
+The last few years have seen the success of deep neural networks in computer vision tasks, in which model designs play an important role. The increasing needs of running high quality deep neural networks on embedded devices encourage the study on efficient model designs \cite{he2015convolutional}. Concurrent with them, a very recent work \cite{zoph2017learning} employs reinforcement learning and model search to explore efficient model designs. The proposed mobile \emph{NASNet} model achieves comparable performance with their counterpart ShuffleNet model.
+
+The concept of group convolution, which was first introduced in \emph{AlexNet} \cite{krizhevsky2012imagenet} for distributing the model over two GPUs because a single block of GPU GTX 580 graphics cards is only 3GB that could not be put down the complete model, has been well demonstrated its effectiveness in ResNeXt \cite{xie2017aggregated}. To overcome the side effects brought by group convolutions, the team come up with a novel \emph{channel shuffle} operation to help the information flowing across feature channels. Based on the two techniques, they build a highly efficient architecture called \emph{ShuffleNet} \cite{zhang2017shufflenet}. Their work generalizes group convolution and depthwise separable convolution.  
+
+\begin{figure*}
+	\begin{center}
+		\includegraphics[scale=0.5,width=1\linewidth]{1.png}
+	\end{center}
+	\caption{Channel shuffle with two stacked group convolutions. GConv stands for group convolution. a) two stacked convolution layers with the same number of groups. Each output channel only relates to the input channels within the group. No cross talk; b) input and output channels are fully related when GConv2 takes data from different groups after GConv1; c) an equivalent implementation to b) using channel shuffle.}
+	\label{fig:1}
+\end{figure*}
+
+\section{ShuffleNet Models}
+
+The core idea of ShuffleNet lies in pointwise group convolution and channel shuffle operation. In tiny networks, expensive pointwise convolutions result in limited number of channels to meet the complexity constraint, which might significantly damage the accuracy. To address the issue, a straightforward solution is to apply group convolutions. Channel shuffle operation makes it possible to build more powerful structures with multiple group convolutional layers.
+
+\begin{figure*}[!pb]
+	\begin{center}
+		\includegraphics[scale=0.5,width=1\linewidth]{2.png}
+	\end{center}
+	\caption{ShuffleNet Units. a) bottleneck unit \cite{he2016deep} with depthwise convolution (DWConv) \cite{howard2017mobilenets}; b) ShuffleNet unit with pointwise group convolution (GConv) and channel shuffle; c) ShuffleNet unit with stride = 2.}
+	\label{fig:2}
+\end{figure*}
+
+\subsection{Group Convolutions}
+
+Modern convolutional neural networks \cite{he2016identity} usually consist of repeated building blocks with the same structure. Among them, state-of-the-art networks such as Xception \cite{chollet2016xception} and ResNeXt \cite{xie2017aggregated} introduce efficient group convolutions into the building blocks to strike an excellent trade-off between representation capability and computational cost. However, Zhang notices that both designs do not fully take the $1\times 1$ convolutions into account, which require considerable complexity.
+
+To address the issue, a straightforward solution is to apply group convolutions. By ensuring that each convolution operates only on the corresponding input channel group, group convolution significantly reduces computation cost. However, if multiple group convolutions stack together, there is one side effect that is outputs from a certain channel are only derived from a small fraction of input channels. Fig.~\ref{fig:1} (a) illustrates a situation of two stacked group convolution layers. It is clear that outputs from a certain group only relate to the inputs within the group. This property blocks information flow between channel groups and weakens representation.
+
+\subsection{Channel Shuffle}
+
+If we allow group convolution to obtain input data from different groups as shown in Fig.~\ref{fig:1} (b), the input and output channels will be fully related. Specifically, for the feature map generated from the previous group layer, we can first divide the channels in each group into several subgroups, then feed each group in the next layer with different subgroups. This can be efficiently and elegantly implemented by a channel shuffle operation as shown in Fig.~\ref{fig:1} (c): suppose a convolutional layer with g groups whose output has $g\times n$ channels; the team first reshape the output channel dimension into $(g , n)$, transposing and then flattening it back as the input of next layer. Moreover, channel shuffle is also differentiable, which means it can be embedded into network structures for end-to-end training. Channel shuffle operation makes it possible to build more powerful structures with multiple group convolutional layers.
+
+\begin{table*}[tp]
+	\caption{ShuffleNet architecture. The complexity is evaluated with FLOPs, \emph{i.e.} the number of floating-point multiplication-adds. Note that for Stage 2, they do not apply group convolution on the first pointwise layer because the number of input channels is relatively small.} \label{t1}
+	\begin{center}
+		\begin{tabular}{c|c|c|c|c| c c c c c}
+			\hline
+			Layer & Output size& KSize & Stride& Repeat & \multicolumn{5}{c}{Output channels (g groups)} \\
+			& &  & &  & g=1 & g=2 & g=3 & g=4 & g=8\\
+			\hline	\hline
+			Image & $224\times 224$ & - &- &- & 3& 3& 3& 3& 3\\
+			\hline
+			Conv1 & $112\times 112$& $3\times 3$& 2& 1& 24& 24& 24& 24& 24\\
+			MaxPool & $56\times 56$& $3\times 3$& 2&- &- & -&- & -&- \\
+			\hline
+			Stage2 & $28\times 28$&-  & 2& 1& 144& 200& 240& 272& 384\\
+			& $28\times 28$&- & 1& 3& 144& 200& 240& 272& 384\\
+			\hline
+			Stage3 & $14\times 14$& - & 2& 1& 288& 400& 480& 544& 768\\
+			& $14\times 14$&- & 1& 7& 288& 400& 480& 544& 768\\
+			\hline
+			Stage4 & $7\times 7$& - & 2& 1& 576& 800& 960& 1088& 1536\\
+			& $7\times 7$& - & 1& 3& 576& 800& 960& 1088& 1536\\
+			\hline
+			GlobalPool & $1\times 1$& $7\times 7$ &- &- &- & -&- &- &- \\
+			\hline
+			FC &- &-  & -& -&1000 &1000 &1000 & 1000& 1000\\
+			\hline\hline
+			Complexity &- & - &- &- &143M &140M &137M & 133M&137M\\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{table*}
+
+\subsection{ShuffleNet Unit}
+
+Taking advantage of the channel shuffle operation, Zhang and his team propose a novel ShuffleNet unit specially designed for small networks. They start from the design principle of bottleneck unit \cite{he2016deep} in Fig.~\ref{fig:2} (a). It is a residual block. In its residual branch, for the $3\times 3$ layer, they apply a computational economical $3\times 3$ depthwise convolution \cite{chollet2016xception} on the bottleneck feature map. Then they replace the first $1\times 1$ layer with pointwise group convolution followed by a channel shuffle operation, to form a ShuffleNet unit as shown in Fig.~\ref{fig:2} (b). The purpose of the second pointwise group convolution is to recover the channel dimension to match the shortcut path. As for the case where ShuffleNet is applied with stride, they simply make two modifications (see Fig.~\ref{fig:2} (c)): (i) add a $3\times 3$ average pooling on the shortcut path; (ii) replace the element-wise addition with channel concatenation, which makes it easy to enlarge channel dimension with little extra computation cost. Thanks to pointwise group convolution with channel shuffle, all components in ShuffleNet unit can be computed efficiently.
+
+\begin{table*}
+\caption{Classification error vs. number of groups g}\label{t2}
+	\begin{center}
+		\begin{tabular}{c|c|c c c c c }
+			\hline
+			Model & Complexity & \multicolumn{5}{c}{Classification error (\%)} \\
+			&(MFLOPs) & g=1 & g=2 & g=3 & g=4 & g=8 \\
+			\hline\hline
+			ShuffleNet $1\times$& 140 & 33.6 & 32.7& 32.6& 32.8 &32.4 \\
+			ShuffleNet $0.5\times$& 38 & 45.1 & 44.4& 43.2&41.6 &42.3 \\
+			ShuffleNet $0.25\times$& 13 & 57.1 & 56.8&55.0 &54.2 &52.7 \\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{table*}
+
+\subsection{Network Architecture}
+
+Built on ShuffleNet units, Zhang presents the overall ShuffleNet architecture in Table~\ref{t1}. The proposed network is mainly composed of a stack of ShuffleNet units grouped into three stages. Intent of his team is to provide a reference design as simple as possible, although they find that further hyper-parameter tunning might generate better results. In ShuffleNet units, group number g controls the connection sparsity of pointwise convolutions. Table~\ref{t1} explores different group numbers and we adapt the output channels to ensure overall computation cost roughly unchanged. Obviously, larger group numbers result in more output channels for a given complexity constraint which helps to encode more information.
+
+
+
+%------------------------------------------------------------------------
+\section{Evaluation of Models}
+
+The team mainly evaluate their models on the ImageNet 2012 classification dataset \cite{russakovsky2015imagenet}. They follow most of the training settings and hyper-parameters used in \cite{xie2017aggregated}. To benchmark, they compare single crop top-1 performance on ImageNet validation set, \emph{i.e.} cropping $224\times 224$ center view from $256\times$ input image and evaluating classification accuracy. They use exactly the same settings for all models to ensure fair comparisons.
+
+To evaluate the importance of pointwise group convolutions, Zhang and his team compare ShuffleNet models of the same complexity whose numbers of groups range from 1 to 8. If the group number equals 1, no pointwise group convolution is involved. For better understanding, they also scale the width of the networks to 3 different complexities and compare their classification performance respectively. Results are shown in Table~\ref{t2}.
+
+From the results, we see that models with group convolutions (g > 1) consistently perform better than the counterparts without pointwise group convolutions (g = 1). Smaller models tend to benefit more from groups. Table~\ref{t2} also shows that for some models (\emph{e.g.} ShuffleNet $0.5 \times$) when group numbers become relatively large (\emph{e.g.} $g = 8$), the classification score saturates or even drops. Furthermore, they also notice that for smaller models such as ShuffleNet $0.25\times$ larger group numbers tend to better results consistently, which suggests wider feature maps bring more benefits for smaller models.
+
+
+
+{\small
+\bibliographystyle{ieee}
+\bibliography{egbib}
+}
+
+\end{document}
