@@ -1,0 +1,120 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\usepackage{times}
+\usepackage{multirow}
+\setmainfont{Times New Roman}
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+\usepackage{stfloats}
+\usepackage[pagebackref=true,colorlinks,linkcolor=red,citecolor=green,breaklinks=true,bookmarks=false]{hyperref}
+\cvprfinalcopy % *** Uncomment this line for the final submission
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ifcvprfinal\pagestyle{empty}\fi
+\setcounter{page}{1}
+\title{Scene Text Recognition with Automatic Rectification}
+\author{Hongzhi Liu\\\\
+Jun 12, 2018}
+
+\begin{document}
+%%%%%%%%% TITLE
+\maketitle
+%\thispagestyle{empty}
+\begin{abstract}
+	In natural scenes, text appears on various kinds of objects, e.g. road signs, billboards and product packaging. It carries rich and high-level semantic information that is important for image understanding. Recognizing text in images facilitates many real-world applications, such as geolocation, driverless car and image-based machine translation. For these reasons, scene text recognition has attracted great interest from the community. Today, I read a thesis written by Baoguang Shi, who is in the School of Electronic Information and Communications from Huazhong University of Science and Technology. His team propose a Robust text recognizer with Automatic REctification, namely RARE, a recognition model that is robust to irregular text. State-of-the-art or highly-competitive performance achieved on several benchmarks well demonstrates the effectiveness of the proposed model.
+\end{abstract}
+%%%%%%%%% BODY TEXT
+\section{Overview of Recognition Model}
+
+In recent years, a rich body of literature concerning scene text recognition has been published. Among the traditional methods, many adopt bottom-up approaches, where individual characters are firstly detected using sliding window, connected components or Hough voting \cite{yao2014strokelets}. Following that, the detected characters are integrated into words by means of dynamic programming. Other work adopts top-down approaches, where text is directly recognized from entire input images, rather than detecting and recognizing individual characters. Some recent work models the problem as a sequence recognition problem, where text is represented by character sequence. Su and Lu \cite{su2014accurate} extract sequential image representation, which is a sequence of HOG \cite{dalal2005histograms} descriptors, and predict the corresponding character sequence with a recurrent neural network (RNN). Shi's method also adopts the sequence prediction scheme but they further take the problem of irregular text into account.
+
+Usually, a text recognizer works best when its input images contain tightly-bounded regular text. This motivates us to apply a spatial transformation prior to recognition, in order to rectify input images into ones that are more ``readable'' by recognizers. In this paper, the team propose a recognition method that is robust to irregular text \cite{shi2016robust}. Specifically, they construct a deep neural network that combines a Spatial Transformer Network (STN) \cite{jaderberg2015spatial} and a Sequence Recognition Network (SRN). An overview of the model is given in Fig.~\ref{fig:1}.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5,width=1\linewidth]{1.png}
+	\end{center}
+	\caption{Schematic overview of RARE, which consists a spatial transformer network (STN) and a sequence recognition network (SRN). The STN transforms an input image to a rectified image, while the SRN recognizes text. The two networks are jointly trained by the back-propagation algorithm \cite{lecun1998gradient}. The dashed lines represent the flows of the back-propagated gradients.}
+	\label{fig:1}
+\end{figure}
+
+\section{Model of RARE}
+
+RARE is a speciallydesigned deep neural network, which consists of a Spatial Transformer Network (STN) and a Sequence Recognition Network (SRN). Overall, the model Shi formulates takes an input image $I$ and outputs a sequence $l = (l_1,\dots,l_T )$, where $l_t$ is the $t$-th character, $T$ is the variable string length.
+
+\subsection{Spatial Transformer Network}
+
+The STN transforms an input image $I$ to a rectified image $I^\prime$ with a predicted TPS transformation. It follows the framework proposed in \cite{jaderberg2015spatial}. As illustrated in Fig.~\ref{fig:2}, it first predicts a set of fiducial points via its localization network. Then, inside the grid generator, it calculates the TPS transformation parameters from the fiducial points, and generates a sampling grid on $I$. The sampler takes both the grid and the input image, it produces a rectified image $I^\prime$ by sampling on the grid points. 
+
+A distinctive property of STN is that its sampler is differentiable.Therefore, once they have a differentiable localization network and a differentiable grid generator, the STN can back-propagate error differentials and gets trained.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5,width=1\linewidth]{2.png}
+	\end{center}
+	\caption{Schematic overview of RARE, which consists a spatial transformer network (STN) and a sequence recognition network (SRN). The STN transforms an input image to a rectified image, while the SRN recognizes text. The two networks are jointly trained by the back-propagation algorithm \cite{lecun1998gradient}. The dashed lines represent the flows of the back-propagated gradients.}
+	\label{fig:2}
+\end{figure}
+
+\subsection{Sequence Recognition Network}
+
+Since target words are inherently sequences of characters, the team model the recognition problem as a sequence recognition problem, and address it with a sequence recognition network. The input to the SRN is a rectified image $I^\prime$, which ideally contains a word that is written horizontally from left to right. They extract a sequential representation from $I^\prime$, and recognize a word from it.
+
+In their model, the SRN is an attention-based model \cite{bahdanau2014neural}, which directly recognizes a sequence from an input image. The SRN consists of an encoder and a decoder. The encoder extracts a sequential representation from the input image $I^\prime$. The decoder recurrently generates a sequence conditioned on the sequential representation, by decoding the relevant contents it attends to at each step.
+
+An easy approach for extracting a sequential representation for $I^\prime$ is to take local image patches from left to right, and describe each of them with a CNN. However, this approach does not share the computation among overlapping patches, thus inefficient. Besides, the spatial dependencies between the patches are not exploited and leveraged. Instead, following \cite{shi2017end}, they build a network that combines convolutional layers and recurrent networks. The network extracts a sequence of feature vectors, given an input image of arbitrary size.
+
+As illustrated in Fig.~\ref{fig:3}, at the bottom of the encoder is several convolutional layers. They produce feature maps that are robust and high-level descriptions of an input image. The output sequence is $h = (h_1,\dots,h_L)$, where $L = W_{conv}$.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5,width=1\linewidth]{3.png}
+	\end{center}
+	\caption{Structure of the SRN, which consists of an encoder and a decoder. The encoder uses several convolution layers (ConvNet) and a two-layer BLSTM network to extract a sequential representation (h) for the input image. The decoder generates a character sequence (including the EOS token) conditioned on h.}
+	\label{fig:3}
+\end{figure}
+
+%------------------------------------------------------------------------
+\section{Evaluation of the Model}
+
+Shi evaluates their model on a number of standard scene text recognition benchmarks, paying special attention to recognition performance on irregular text. First they evaluate the model on some general recognition benchmarks, which mainly consist of regular text, but irregular text also exists. Next, they perform evaluations on benchmarks that are specially designed for irregular text recognition. For all benchmarks, performance is measured by word accuracy.
+
+To validate the effectiveness of the rectification scheme, they evaluate RARE on the task of perspective text recognition. SVT-Perspective \cite{quy2013recognizing} is specifically designed for evaluating performance of perspective text recognition algorithms. Text samples in SVT-Perspective are picked from side view angles in Google Street View, thus most of them are heavily deformed by perspective distortion. SVT-Perspective consists of 639 cropped images for testing. Each image is associated with a 50-word lexicon, which is inherited from the SVT \cite{wang2011end} dataset. The team use the same model trained on the synthetic dataset without fine-tuning. For comparison, they test the CRNN model \cite{shi2017end} on SVT-Perspective.
+
+Tab.~\ref{t1}. summarizes the results. In the second and third columns, the team compare the accuracies of recognition with the 50-word lexicon and the full lexicon. Their method outperforms, which is a perspective text recognition method, by a large margin on both lexicons. However, this gap is partially due to that we use a much larger training set than \cite{quy2013recognizing}. In the comparisons with \cite{shi2017end}, which uses the same training set as RARE, they still observe significant improvements in both the Full lexicon and the lexicon-free settings. 
+
+Furthermore, RARE outperforms by a even larger margin on SVTPerspective. The reason is that the SVT-perspective dataset mainly consists of perspective text, which is inappropriate for direct recognition. Their rectification scheme can significantly alleviate this problem.
+
+\begin{table}
+	\caption{Recognition accuracies on SVT-Perspective \cite{quy2013recognizing}. Recognition accuracies on SVT-Perspective.``50'' and ``Full'' represent recognition with 50-word lexicons and the
+		full lexicon respectively. ``None'' represents recognition without a lexicon.}\label{t1}
+	\begin{center}
+		\begin{tabular}{c c c c }
+			\hline
+			Method & 50  & Full & None \\
+			\hline
+			Wang et al. \cite{wang2011end} & 40.5 & 26.1 & - \\
+			Mishra et al. \cite{mishra2012scene} & 45.7 & 24.7 & - \\
+			Wang et al. \cite{wang2012end} & 40.2 & 32.4 & - \\
+			Phan et al. \cite{quy2013recognizing} & 75.6 & 67.0 & - \\
+			Shi et al. \cite{shi2017end} & 92.6 & 72.6 & 66.8 \\
+			RARE & 91.2 & 77.4 & 71.8 \\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+
+{\small
+\bibliographystyle{ieee}
+\bibliography{egbib}
+}
+
+\end{document}
