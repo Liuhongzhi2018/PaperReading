@@ -1,0 +1,126 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\usepackage{times}
+\usepackage{multirow}
+\setmainfont{Times New Roman}
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+\usepackage{stfloats}
+\usepackage[pagebackref=true,colorlinks,linkcolor=red,citecolor=green,breaklinks=true,bookmarks=false]{hyperref}
+\cvprfinalcopy % *** Uncomment this line for the final submission
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ifcvprfinal\pagestyle{empty}\fi
+\setcounter{page}{1}
+\title{An Efficient and Accurate Scene Text Detector}
+\author{Hongzhi Liu\\\\
+Jun 14, 2018}
+
+\begin{document}
+%%%%%%%%% TITLE
+\maketitle
+%\thispagestyle{empty}
+\begin{abstract}
+	Recently, extracting and understanding textual information embodied in natural scenes have become increasingly important and popular, which is evidenced by the unprecedented large numbers of participants of the ICDAR series contests and the launch of the TRAIT 2016 evaluation by NIST. Today, I read a thesis written by Xinyu Zhou, who is from Megvii Technology Inc.. His team propose a simple yet powerful pipeline that yields fast and accurate text detection in natural scenes. Experiments on standard datasets including MSRA-TD500 demonstrate that the proposed algorithm significantly outperforms state-of-the-art methods in terms of both accuracy and efficiency. On the ICDAR 2015 dataset, the proposed algorithm achieves an F-score of 0.7820 at 13.2fps at 720p resolution.
+\end{abstract}
+%%%%%%%%% BODY TEXT
+\section{Overview of EAST}
+
+Scene text detection and recognition have been active research topics in computer vision for a long period of time. The core of text detection is the design of features to distinguish text from backgrounds. Conventional approaches rely on manually designed features. Stroke Width Transform (SWT) \cite{Epshtein2010Detecting} and Maximally Stable Extremal Regions (MSER) \cite{Neumann2011A} based methods generally seek character candidates via edge detection or extremal region extraction. In recent years, the area of scene text detection has entered a new era that deep neural network based algorithms \cite{Huang2014Robust} have gradually become the mainstream. However, existing methods, either conventional or deep neural network based, mostly consist of several stages and components, which are probably sub-optimal and time-consuming. Therefore, the accuracy and efficiency of such methods are still far from satisfactory.
+
+In this paper, the team propose a efficient and accurate scene text detection pipeline that has only two stages \cite{Zhou2017EAST}. The pipeline utilizes a fully convolutional network (FCN) model that directly produces word or text-line level predictions, excluding redundant and slow intermediate steps. The produced text predictions, which can be either rotated rectangles or quadrangles, are sent to Non-Maximum Suppression to yield final results. Compared with existing methods, the proposed algorithm achieves significantly enhanced performance, while running much faster, according to the qualitative and quantitative experiments on standard benchmarks.
+
+\begin{figure*}
+	\begin{center}
+		\includegraphics[scale=0.5,width=1\linewidth]{1.png}
+	\end{center}
+	\caption{Comparison of pipelines of several recent works on scene text detection: (a) Horizontal word detection and recognition pipeline proposed by Jaderberg \emph{et al.} \cite{Jaderberg2014Reading}; (b) Multi-orient text detection pipeline proposed by Zhang \emph{et al.} \cite{Zhang2016Multi}; (c) Multi-orient text detection pipeline proposed by Yao \emph{et al.} \cite{article}; (d) Horizontal text detection using CTPN, proposed by Tian \emph{et al.} \cite{Tian2016Detecting}; (e) Their pipeline, which eliminates most intermediate steps, consists of only two stages and is much simpler than previous solutions.} \label{fig:1}
+\end{figure*}
+
+\section{Method of EAST}
+
+Zhou devises a deep FCN-based pipeline that directly targets the final goal of text detection: word or textline level detection. As depicted in Fig.~\ref{fig:1}(e), the model abandons unnecessary intermediate components and steps and allows for end-to-end training and optimization.
+
+The key component of the proposed algorithm is a neural network model, which is trained to directly predict the existence of text instances and their geometries from full images. The model is a fully-convolutional neural network adapted for text detection that outputs dense per-pixel predictions of words or text lines. This eliminates intermediate steps such as candidate proposal, text region formation and word partition. The post-processing steps only include thresholding and NMS on predicted geometric shapes. The detector is named as EAST, since it is an Efficient and Accuracy Scene Text detection pipeline.
+
+\subsection{Network Design}
+
+Several factors must be taken into account when designing neural networks for text detection. Since the sizes of word regions, vary tremendously, determining the existence of large words would require features from late-stage of a neural network. A schematic view of our model is depicted in Fig.~\ref{fig:2}. The model can be decomposed in to three parts: feature extractor stem, feature-merging branch and output layer.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5,width=1\linewidth]{2.png}
+	\end{center}
+	\caption{Structure of the text detection FCN.}
+	\label{fig:2}
+\end{figure}
+
+In Fig.~\ref{fig:2}, PVANet \cite{Kim2016PVANET} is depicted. In their experiments, the team also adopted the well-known VGG16 \cite{Simonyan2014Very} model, where feature maps after pooling-2 to pooling-5 are extracted. In the feature-merging branch, they gradually merge them as Equation~\ref{branch}:
+\begin{subequations}
+\begin{align}
+g_i&=
+\begin{cases}
+unpool(h_i), & \mbox{if } i\le 3, \\
+conv_{3\times 3}(h_i), & \mbox{if } i=4.
+\end{cases}  \\
+h_i&=
+\begin{cases}
+f_i, & \mbox{if } i = 1, \\
+conv_{3\times 3}(conv_{1\times 1}([g_{i-1};f_i])), & \mbox{otherwise}.
+\end{cases}      
+\end{align}  \label{branch}
+\end{subequations}
+where $g_i$ is the merge base, and $h_i$ is the merged feature map. Next, a $conv_{1\times 1}$ bottleneck cuts down the number of channels and reduces computation, followed by a $conv_{3\times 3}$ that fuses the information to finally produce the output of this merging stage. Following the last merging stage, a $conv_{3\times 3}$ layer produces the final feature map of the merging branch and feed it to the output layer.
+
+\subsection{Label Generation}
+
+Without loss of generality, Zhou only considers the case where the geometry is a quadrangle. The positive area of the quadrangle on the score map is designed to be roughly a shrunk version of the original one.
+
+For those datasets whose text regions are annotated in QUAD style (\emph{e.g.}, ICDAR 2015), the team first generate a rotated rectangle that covers the region with minimal area. Then for each pixel which has positive score, they calculate its distances to the 4 boundaries of the text box, and put them to the 4 channels of RBOX ground truth. For the QUAD ground truth, the value of each pixel with positive score in the 8-channel geometry map is its coordinate shift from the 4 vertices of the quadrangle.
+
+\subsection{Loss Functions}
+
+In most state-of-the-art detection pipelines, training images are carefully processed by balanced sampling and hard negative mining to tackle with the imbalanced distribution of target objects. Doing so would potentially improve the network performance. However, using such techniques inevitably introduces a non-differentiable stage and more parameters to tune and a more complicated pipeline, which contradicts our design principle.
+
+The loss can be formulated as Equation~\ref{loss}:
+\begin{equation}
+L=L_s+\lambda_g L_g.  \label{loss}
+\end{equation}
+where $L_s$ and $L_g$ represents the losses for the score map and the geometry, respectively, and $\lambda_g$ weighs the importance between two losses.
+
+%------------------------------------------------------------------------
+\section{Evaluation of the Model}
+
+As shown in Tab.~\ref{t1}, on MSRA-TD500 all of the three settings of the method achieve excellent results. The F-score of the best performer (Theirs+PVANET2x) is slightly higher than that of \cite{article}. Compared with the method of Zhang \emph{et al.} \cite{Zhang2016Multi}, the previous published state-of-the-art system, the best performer (Theirs+PVANET2x) obtains an improvement of 0.0208 in F-score and 0.0428 in precision.
+
+\begin{table}
+	\caption{Results on MSRA-TD500}\label{t1}
+	\begin{center}
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			Algorithm & Recall  & Precision & F-score \\
+			\hline\hline
+			Theirs + PVANET2x & 0.6743 & 0.8728 & 0.7608 \\
+			Theirs + PVANET & 0.6713 & 0.8356 & 0.7445 \\
+			Theirs + VGG16 & 0.6160 & 0.8167 & 0.7023 \\
+			Yao et al. \cite{article} & 0.7531 & 0.7651 & 0.7591 \\
+			Zhang et al. \cite{Zhang2016Multi} & 0.67 & 0.83 & 0.74 \\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+
+{\small
+\bibliographystyle{ieee}
+\bibliography{egbib}
+}
+
+\end{document}
