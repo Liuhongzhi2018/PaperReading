@@ -19,97 +19,89 @@
 % Pages are numbered in submission mode, and unnumbered in camera-ready
 %\ifcvprfinal\pagestyle{empty}\fi
 \setcounter{page}{1}
-\title{Scene Text Recognition with Automatic Rectification}
+\title{Feature Pyramid Networks for Object Detection }
 \author{Hongzhi Liu\\\\
-Jun 12, 2018}
+Jun 16, 2018}
 
 \begin{document}
 %%%%%%%%% TITLE
 \maketitle
 %\thispagestyle{empty}
 \begin{abstract}
-	In natural scenes, text appears on various kinds of objects, e.g. road signs, billboards and product packaging. It carries rich and high-level semantic information that is important for image understanding. Recognizing text in images facilitates many real-world applications, such as geolocation, driverless car and image-based machine translation. For these reasons, scene text recognition has attracted great interest from the community. Today, I read a thesis written by Baoguang Shi, who is in the School of Electronic Information and Communications from Huazhong University of Science and Technology. His team propose a Robust text recognizer with Automatic REctification, namely RARE, a recognition model that is robust to irregular text. State-of-the-art or highly-competitive performance achieved on several benchmarks well demonstrates the effectiveness of the proposed model.
+	Recognizing objects at vastly different scales is a fundamental challenge in computer vision. Feature pyramids are a basic component in recognition systems for detecting objects at different scales. But recent deep learning object detectors have avoided pyramid representations, in part because they are compute and memory intensive. Today, I read a thesis written by Tsung-Yi Lin, who is from Facebook AI Research. His team exploit the inherent multi-scale, pyramidal hierarchy of deep convolutional networks, called a Feature Pyramid Network (FPN), to construct feature pyramids with marginal extra cost. A top-down architecture with lateral connections is developed for building high-level semantic feature maps at all scales. Using FPN in a basic Faster R-CNN system, our method achieves state-of-the-art single-model results on the COCO detection benchmark without bells and whistles, surpassing all existing single-model entries.
 \end{abstract}
 %%%%%%%%% BODY TEXT
-\section{Overview of Recognition Model}
+\section{Overview of Feature Pyramid Network}
 
-In recent years, a rich body of literature concerning scene text recognition has been published. Among the traditional methods, many adopt bottom-up approaches, where individual characters are firstly detected using sliding window, connected components or Hough voting \cite{yao2014strokelets}. Following that, the detected characters are integrated into words by means of dynamic programming. Other work adopts top-down approaches, where text is directly recognized from entire input images, rather than detecting and recognizing individual characters. Some recent work models the problem as a sequence recognition problem, where text is represented by character sequence. Su and Lu \cite{su2014accurate} extract sequential image representation, which is a sequence of HOG \cite{dalal2005histograms} descriptors, and predict the corresponding character sequence with a recurrent neural network (RNN). Shi's method also adopts the sequence prediction scheme but they further take the problem of irregular text into account.
-
-Usually, a text recognizer works best when its input images contain tightly-bounded regular text. This motivates us to apply a spatial transformation prior to recognition, in order to rectify input images into ones that are more ``readable'' by recognizers. In this paper, the team propose a recognition method that is robust to irregular text \cite{shi2016robust}. Specifically, they construct a deep neural network that combines a Spatial Transformer Network (STN) \cite{jaderberg2015spatial} and a Sequence Recognition Network (SRN). An overview of the model is given in Fig.~\ref{fig:1}.
+HOG and SIFT pyramids have been used in numerous works for image classification, object detection, human pose estimation and more. Before HOG and SIFT, early work on face detection with ConvNets \cite{Vaillant1994Original} computed shallow networks over image pyramids to detect faces across scales. With the development of modern deep ConvNets \cite{Krizhevsky2012ImageNet}, object detectors like Over-Feat \cite{Sermanet2013OverFeat} and R-CNN \cite{girshick2014rich} showed dramatic improvements in accuracy. Because they offer a good trade-off between accuracy and speed. Multi-scale detection, however, still performs better, especially for small objects. There are recent methods exploiting lateral or skip connections that associate low-level feature maps across resolutions and semantic levels. Although these methods adopt architectures with pyramidal shapes, they are unlike featurized image pyramids \cite{dalal2005histograms} where predictions are made independently at all levels, see Fig.~\ref{fig:1}. In fact, for the pyramidal architecture in Fig.~\ref{fig:1} (top), image pyramids are still needed to recognize objects across multiple scales \cite{pinheiro2016learning}.
 
 \begin{figure}
 	\begin{center}
-		\includegraphics[scale=0.5,width=1\linewidth]{1.png}
+		\includegraphics[scale=0.5]{1.png}
 	\end{center}
-	\caption{Schematic overview of RARE, which consists a spatial transformer network (STN) and a sequence recognition network (SRN). The STN transforms an input image to a rectified image, while the SRN recognizes text. The two networks are jointly trained by the back-propagation algorithm \cite{lecun1998gradient}. The dashed lines represent the flows of the back-propagated gradients.}
+	\caption{Top: a top-down architecture with skip connections, where predictions are made on the finest level. Bottom: their model that has a similar structure but leverages it as a feature pyramid, with predictions made independently at all levels.}
 	\label{fig:1}
 \end{figure}
 
-\section{Model of RARE}
+The goal of this paper is to naturally leverage the pyramidal shape of a ConvNet’s feature hierarchy while creating a feature pyramid that has strong semantics at all scales. To achieve this goal, Lin relies on an architecture that combines low-resolution, semantically strong features with high-resolution, semantically weak features via a top-down pathway and lateral connections. Lin evaluates their method, called a Feature Pyramid Network (FPN), in various systems for detection and segmentation \cite{lin2017feature}. They report a state-of-the-art single-model result on the challenging COCO detection benchmark \cite{lin2014microsoft} simply based on FPN and a basic Faster R-CNN detector surpassing all existing heavily-engineered single-model entries of competition winners. Furthermore, their method is also easily extended to mask proposals and improves both instance segmentation AR and speed over state-of-the-art methods that heavily depend on image pyramids.
 
-RARE is a speciallydesigned deep neural network, which consists of a Spatial Transformer Network (STN) and a Sequence Recognition Network (SRN). Overall, the model Shi formulates takes an input image $I$ and outputs a sequence $l = (l_1,\dots,l_T )$, where $l_t$ is the $t$-th character, $T$ is the variable string length.
+\section{Architecture of Feature Pyramid Networks}
 
-\subsection{Spatial Transformer Network}
+The goal of team is to leverage a ConvNet's pyramidal feature hierarchy, which has semantics from low to high levels and build a feature pyramid with high-level semantics throughout. The resulting Feature Pyramid Network is general-purpose and in this paper they focus on sliding window proposers \cite{ren2015faster} and region-based detectors \cite{girshick2015fast}. Their method takes a single-scale image of an arbitrary size as input, and outputs proportionally sized feature maps at multiple levels, in a fully convolutional fashion. This process is independent of the backbone convolutional architectures and in this paper they present results using ResNets \cite{he2016deep}. The construction of the pyramid involves a bottom-up pathway, a top-down pathway, and lateral connections, as introduced in the following. 
 
-The STN transforms an input image $I$ to a rectified image $I^\prime$ with a predicted TPS transformation. It follows the framework proposed in \cite{jaderberg2015spatial}. As illustrated in Fig.~\ref{fig:2}, it first predicts a set of fiducial points via its localization network. Then, inside the grid generator, it calculates the TPS transformation parameters from the fiducial points, and generates a sampling grid on $I$. The sampler takes both the grid and the input image, it produces a rectified image $I^\prime$ by sampling on the grid points. 
+{\bfseries Bottom-up Pathway.} The bottom-up pathway is the feed-forward computation of the backbone ConvNet, which computes a feature hierarchy consisting of feature maps at several scales with a scaling step of 2. There are often many layers producing output maps of the same size and team say these layers are in the same network stage. For their feature pyramid, they define one pyramid level for each stage. They choose the output of the last layer of each stage as their reference set of feature maps, which they will enrich to create our pyramid. This choice is natural since the deepest layer of each stage should have the strongest features.
 
-A distinctive property of STN is that its sampler is differentiable.Therefore, once they have a differentiable localization network and a differentiable grid generator, the STN can back-propagate error differentials and gets trained.
+{\bfseries Top-down pathway and lateral connections.} The topdown pathway hallucinates higher resolution features by upsampling spatially coarser, but semantically stronger, feature maps from higher pyramid levels. These features are then enhanced with features from the bottom-up pathway via lateral connections. Fig.~\ref{fig:2} shows the building block that constructs our topdown feature maps. With a coarser-resolution feature map, they upsample the spatial resolution by a factor of 2. The upsampled map is then merged with the corresponding bottom-up map by element-wise addition. This process is iterated until the finest resolution map is generated. To start the iteration, we simply attach a $1\times 1$ convolutional layer on $C_5$ to produce the coarsest resolution map. Finally, the team append a 3×3 convolution on each merged map to generate the final feature map, which is to reduce the aliasing effect of upsampling. This final set of feature maps is called ${P_2, P_3, P_4, P_5}$, corresponding to ${C_2,C_3,C_4,C_5}$ that are respectively of the same spatial sizes.
+
+Because all levels of the pyramid use shared classifiers as in a traditional featurized image pyramid, the team fix the feature dimension (numbers of channels, denoted as d) in all the feature maps. They set $d = 256$ in this paper and thus all extra convolutional layers have 256-channel outputs. There are no non-linearities in these extra layers, which they have empirically found to have minor impacts.
 
 \begin{figure}
 	\begin{center}
 		\includegraphics[scale=0.5,width=1\linewidth]{2.png}
 	\end{center}
-	\caption{Schematic overview of RARE, which consists a spatial transformer network (STN) and a sequence recognition network (SRN). The STN transforms an input image to a rectified image, while the SRN recognizes text. The two networks are jointly trained by the back-propagation algorithm \cite{lecun1998gradient}. The dashed lines represent the flows of the back-propagated gradients.}
+	\caption{A building block illustrating the lateral connection and the top-down pathway, merged by addition.}
 	\label{fig:2}
 \end{figure}
 
-\subsection{Sequence Recognition Network}
+\section{Feature Pyramids Building}
 
-Since target words are inherently sequences of characters, the team model the recognition problem as a sequence recognition problem, and address it with a sequence recognition network. The input to the SRN is a rectified image $I^\prime$, which ideally contains a word that is written horizontally from left to right. They extract a sequential representation from $I^\prime$, and recognize a word from it.
+The method of team is a generic solution for building feature pyramids inside deep ConvNets. To demonstrate the simplicity and effectiveness of their method, they make minimal modifications to the original systems of \cite{ren2015faster,girshick2015fast} when adapting them to their feature pyramid.
 
-In their model, the SRN is an attention-based model \cite{bahdanau2014neural}, which directly recognizes a sequence from an input image. The SRN consists of an encoder and a decoder. The encoder extracts a sequential representation from the input image $I^\prime$. The decoder recurrently generates a sequence conditioned on the sequential representation, by decoding the relevant contents it attends to at each step.
+\subsection{Feature Pyramid Networks for RPN}
 
-An easy approach for extracting a sequential representation for $I^\prime$ is to take local image patches from left to right, and describe each of them with a CNN. However, this approach does not share the computation among overlapping patches, thus inefficient. Besides, the spatial dependencies between the patches are not exploited and leveraged. Instead, following \cite{shi2017end}, they build a network that combines convolutional layers and recurrent networks. The network extracts a sequence of feature vectors, given an input image of arbitrary size.
+Lin adapts RPN by replacing the single-scale feature map with our FPN. He attaches a head of the same design ($3\times 3$ conv and two sibling $1\times 1$ convs) to each level on their feature pyramid. Because the head slides densely over all locations in all pyramid levels, it is not necessary to have multi-scale anchors on a specific level. Instead, they assign anchors of a single scale to each level. Formally, they define the anchors to have areas of ${32^2, 64^2, 128^2, 256^2, 512^2}$ pixels on ${P_2, P_3, P_4, P_5,P_6}$ respectively. As in \cite{ren2015faster} they also use anchors of multiple aspect ratios ${1:2, 1:1, 2:1}$ at each level. So in total there are 15 anchors over the pyramid.
 
-As illustrated in Fig.~\ref{fig:3}, at the bottom of the encoder is several convolutional layers. They produce feature maps that are robust and high-level descriptions of an input image. The output sequence is $h = (h_1,\dots,h_L)$, where $L = W_{conv}$.
+With the above adaptations, RPN can be naturally trained and tested with their FPN, in the same fashion as in \cite{ren2015faster}. Lin elaborates on the implementation details in the experiments.
 
-\begin{figure}
-	\begin{center}
-		\includegraphics[scale=0.5,width=1\linewidth]{3.png}
-	\end{center}
-	\caption{Structure of the SRN, which consists of an encoder and a decoder. The encoder uses several convolution layers (ConvNet) and a two-layer BLSTM network to extract a sequential representation (h) for the input image. The decoder generates a character sequence (including the EOS token) conditioned on h.}
-	\label{fig:3}
-\end{figure}
+\subsection{Feature Pyramid Networks for Fast RCNN}
+
+Fast R-CNN \cite{girshick2015fast} is a region-based object detector in which Region-of-Interest (RoI) pooling is used to extract features. Fast R-CNN is most commonly performed on a single-scale feature map. To use it with their FPN, they need to assign RoIs of different scales to the pyramid levels. They view their feature pyramid as if it were produced from an image pyramid. Thus they can adapt the assignment strategy of region-based detectors \cite{girshick2015fast,he2014spatial} in the case when running on image pyramids. Formally, they assign an RoI of width $w$ and height $h$ to the level $P_k$ of our feature pyramid as Equation~\ref{pyramid}:
+
+\begin{equation}
+k=\left \lfloor k_0+log_2(\sqrt{wh}/224)  \right \rfloor.  \label{pyramid}
+\end{equation}
+Here 224 is the canonical ImageNet pre-training size, and $k_0$ is the target level on which an RoI with $w \times h = 2242$ should be mapped into. Analogous to the ResNet-based Faster R-CNN system \cite{he2016deep} that uses $C_4$ as the single-scale feature map, we set $k_0$ to 4. Intuitively, Equation~\ref{pyramid} means that if the RoI's scale becomes smaller, it should be mapped into a finer resolution level. Based on these adaptations, one can train and test Fast R-CNN on top of the feature pyramid. Implementation details are given in the experimental section.
 
 %------------------------------------------------------------------------
 \section{Evaluation of the Model}
 
-Shi evaluates their model on a number of standard scene text recognition benchmarks, paying special attention to recognition performance on irregular text. First they evaluate the model on some general recognition benchmarks, which mainly consist of regular text, but irregular text also exists. Next, they perform evaluations on benchmarks that are specially designed for irregular text recognition. For all benchmarks, performance is measured by word accuracy.
+In the above they used a fixed set of proposals to investigate the detectors. But in a Faster R-CNN system \cite{ren2015faster}, the RPN and Fast R-CNN must use \emph{the same network back-bone} in order to make feature sharing possible. Tab.~\ref{t1} shows the comparisons between their method and two baselines, all using consistent backbone architectures for RPN and Fast R-CNN. Tab.~\ref{t1}(a) shows their reproduction of the baseline Faster R-CNN system as described in \cite{he2016deep}. Under controlled settings, our FPN (Tab.~\ref{t1}(c)) is better than this strong baseline by 2.3 points AP and 3.8 points AP@0.5.
 
-To validate the effectiveness of the rectification scheme, they evaluate RARE on the task of perspective text recognition. SVT-Perspective \cite{quy2013recognizing} is specifically designed for evaluating performance of perspective text recognition algorithms. Text samples in SVT-Perspective are picked from side view angles in Google Street View, thus most of them are heavily deformed by perspective distortion. SVT-Perspective consists of 639 cropped images for testing. Each image is associated with a 50-word lexicon, which is inherited from the SVT \cite{wang2011end} dataset. The team use the same model trained on the synthetic dataset without fine-tuning. For comparison, they test the CRNN model \cite{shi2017end} on SVT-Perspective.
-
-Tab.~\ref{t1}. summarizes the results. In the second and third columns, the team compare the accuracies of recognition with the 50-word lexicon and the full lexicon. Their method outperforms, which is a perspective text recognition method, by a large margin on both lexicons. However, this gap is partially due to that we use a much larger training set than \cite{quy2013recognizing}. In the comparisons with \cite{shi2017end}, which uses the same training set as RARE, they still observe significant improvements in both the Full lexicon and the lexicon-free settings. 
-
-Furthermore, RARE outperforms by a even larger margin on SVTPerspective. The reason is that the SVT-perspective dataset mainly consists of perspective text, which is inappropriate for direct recognition. Their rectification scheme can significantly alleviate this problem.
-
-\begin{table}
-	\caption{Recognition accuracies on SVT-Perspective \cite{quy2013recognizing}. Recognition accuracies on SVT-Perspective.``50'' and ``Full'' represent recognition with 50-word lexicons and the
-		full lexicon respectively. ``None'' represents recognition without a lexicon.}\label{t1}
+\begin{table*}
+	\caption{Object detection results using Faster R-CNN \cite{ren2015faster} evaluated on the COCO minival set. The backbone network for RPN are consistent with Fast R-CNN. Models are trained on the trainval35k set and use ResNet-50. Provided by authors of \cite{he2016deep}.}\label{t1}
 	\begin{center}
-		\begin{tabular}{c c c c }
+		\begin{tabular}{|c|c|c|c|c c|c|c|c|c|c|}
 			\hline
-			Method & 50  & Full & None \\
+			Faster R-CNN & proposals & feature & head & lateral?& top-down?& AP@0.5& AP& $AP_s$& $AP_m$&$AP_l$\\
 			\hline
-			Wang et al. \cite{wang2011end} & 40.5 & 26.1 & - \\
-			Mishra et al. \cite{mishra2012scene} & 45.7 & 24.7 & - \\
-			Wang et al. \cite{wang2012end} & 40.2 & 32.4 & - \\
-			Phan et al. \cite{quy2013recognizing} & 75.6 & 67.0 & - \\
-			Shi et al. \cite{shi2017end} & 92.6 & 72.6 & 66.8 \\
-			RARE & 91.2 & 77.4 & 71.8 \\
+			baseline from He et al. \cite{he2016deep} & RPN, $C_4$ & $C_4$ & conv5 & & & 47.3& 26.3&-& -& -\\
+			(a) baseline on conv4 & RPN, $C_4$ & $C_4$ & conv5 & & & 53.1& 31.6& 13.2& 35.6& 47.1\\
+			(b) baseline on conv5 & RPN, $C_5$ & $C_5$ & $2fc$ & & & 51.7& 28.0& 9.6&31.9& 43.1\\
+		    (c) FPN & RPN, ${P_k}$ & ${P_k}$ & $2fc$ & $\surd$& $\surd$&56.9& 33.9& 17.8& 37.7&45.8\\
 			\hline
 		\end{tabular}
 	\end{center}
-\end{table}
+\end{table*}
 
 
 {\small
