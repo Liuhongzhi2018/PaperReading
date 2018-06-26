@@ -1,0 +1,119 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\usepackage{times}
+\usepackage{multirow}
+\setmainfont{Times New Roman}
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+\usepackage{stfloats}
+\usepackage[pagebackref=true,colorlinks,linkcolor=red,citecolor=green,breaklinks=true,bookmarks=false]{hyperref}
+\cvprfinalcopy % *** Uncomment this line for the final submission
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ifcvprfinal\pagestyle{empty}\fi
+\setcounter{page}{1}
+\title{Photo-Realistic Single Image Super-Resolution}
+\author{Hongzhi Liu\\\\
+Jun 26, 2018}
+
+\begin{document}
+%%%%%%%%% TITLE
+\maketitle
+%\thispagestyle{empty}
+\begin{abstract}
+	As we all know, single image super-resolution break through in accuracy and speed using faster and deeper convolutional neural networks. However, there is one central problem remains largely unsolved that how to recover the finer texture details when we super-resolve at large upscaling factors. Today, I read a thesis written by Christian Ledig, who is from Twitter. His team introduce SRGAN, a generative adversarial network (GAN) for image superresolution (SR). To our knowledge, it is the first framework capable of inferring photo-realistic natural images for $4\times$ upscaling factors. An extensive mean-opinion-score (MOS) test shows hugely significant gains in perceptual quality using SRGAN. The MOS scores obtained with SRGAN are closer to those of the original high-resolution images than to those obtained with any state-of-the-art method.
+\end{abstract}
+%%%%%%%%% BODY TEXT
+\section{Overview of SRGAN}
+
+Recent overview articles on image SR include Nasrollahi and Moeslund \cite{Nasrollahi2014Super} or Yang \emph{et al.} \cite{Yang2014Single}. Prediction-based methods were among the first methods to tackle SISR. Besides, more powerful approaches aim to establish a complex mapping between low and high resolution image information and usually rely on training data. More powerful approaches aim to establish a complex mapping between low- and high-resolution image information and usually rely on training data. Many methods that are based on example-pairs rely on LR training patches for which the corresponding HR counterparts are known. And recently convolutional neural network (CNN) based SR algorithms have shown excellent performance. Subsequently, it was shown that enabling the network to learn the upscaling filters directly can further increase performance both in terms of accuracy and speed \cite{Dong2016Accelerating}. Johnson \emph{et al.} \cite{Johnson2016Perceptual} and Bruna \emph{et al.} \cite{Bruna2015Super} rely on a loss function closer to perceptual similarity to recover visually more convincing HR images.
+
+In this paper, Christian Ledig and his team propose a super-resolution generative adversarial network (SRGAN) for which they employ a deep residual network (ResNet) with skip-connection and diverge from MSE as the sole optimization target \cite{Ledig2017Photo}. They define a novel perceptual loss using high-level feature maps of the VGG network \cite{Johnson2016Perceptual} combined with a discriminator that encourages solutions perceptually hard to distinguish from the HR reference images. An example photo-realistic image that was superresolved with a $4\times$ upscaling factor is shown in Fig.~\ref{fig:1}.
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.4]{1.png}
+	\end{center}
+	\caption{Super-resolved image (left) is almost indistinguishable from original (right).}
+	\label{fig:1}
+\end{figure}
+
+\section{Method of the Super-Resolution Generative Adversarial Network}
+
+In SISR the aim is to estimate a high-resolution, superresolved image $l^{SR}$ from a low-resolution input image $I^{LR}$. The ultimate goal of Ledig is to train a generating function $G$ that estimates for a given LR input image its corresponding HR counterpart. To achieve this, he trains a generator network as a feed-forward CNN $G_{\theta_G}$ parametrized by $\theta_G$ as Eq.~\ref{train}:
+\begin{equation}
+\hat{\theta_G}=arg \min_{\theta_G} \frac{1}{N}\sum_{n=1}^{N}l^{SR}(G_{\theta G}(I_n^{LR}),I_n^{HR}).   \label{train}
+\end{equation}
+Here $\theta_G=\{W_{1:L};b_{1:L}\}$ denotes the weights and biases of a L-layer deep network and is obtained by optimizing a SR-specific loss function $I^{SR}$. For training images $I_n^{HR}$, $n = 1,\ldots,N$ with corresponding $I_n^{LR}$, $n = 1,\ldots,N$. In this work, the team specifically design a perceptual loss $I^{SR}$ as a weighted combination of several loss components that model distinct desirable characteristics of the recovered SR image.
+
+\subsection{Adversarial network architecture}
+
+Ledig and his team further define a discriminator network $D_{\theta D}$ which they optimize in an alternating manner along with $G_{\theta G}$ to solve the adversarial min-max problem:
+\begin{equation}
+\begin{aligned}
+\begin{split}
+\min_{\theta_G}\max_{\theta_D}&\mathbb{E}_I^{HR}\sim P_{train}(I^{HR})[\log D_{\theta D}I^{HR}]+\\
+&\mathbb{E}_I^{LR}\sim P_G(I^{LR})[\log (1-D_{\theta D}(G_{\theta G}I^{LR}))].   \label{solve}
+\end{split}
+\end{aligned}
+\end{equation}
+
+The general idea behind this formulation is that it allows one to train a generative model G with the goal of fooling a differentiable discriminator D that is trained to distinguish super-resolved images from real images. With this approach their generator can learn to create solutions that are highly similar to real images and thus difficult to classify by D. This encourages perceptually superior solutions residing in the subspace, the manifold, of natural images. This is in contrast to SR solutions obtained by minimizing pixel-wise error measurements such as the MSE.
+
+To discriminate real HR images from generated SR samples the team train a discriminator network. The architecture is shown in Fig.~\ref{fig:2}. They follow the architectural guidelines summarized by Radford \emph{et al.} \cite{Radford2015Unsupervised} and use LeakyReLU activation (α = 0.2) and avoid max-pooling throughout the network. 
+\begin{figure*}
+	\begin{center}
+		\includegraphics[scale=0.6]{2.png}
+	\end{center}
+	\caption{Architecture of Generator and Discriminator Network with corresponding kernel size (k), number of feature maps (n) and stride (s) indicated for each convolutional layer.}
+	\label{fig:2}
+\end{figure*}
+
+\begin{table}
+	\caption{Performance of different loss functions for SRResNet and the adversarial networks on Set5 and Set14 benchmark data. MOS score significantly higher (p < 0.05) than with other losses in that category.}\label{t1}
+	\begin{center}
+		\begin{tabular}{|c c c|c c c|}
+			\hline
+			\multicolumn{3}{|c|}{SRResNet-} & \multicolumn{3}{|c|}{SRGAN-} \\
+			\hline
+			Set5 & MSE & VGG22 & MSE & VGG22 & VGG54 \\
+			
+			PSNR & 32.05 & 30.51 & 30.64& 29.84& 29.40 \\
+			
+			SSIM & 0.9019 & 0.8803 & 0.8701&0.8468& 0.8472 \\
+			
+			MOS & 3.37 & 3.46 & 3.77& 3.78& 3.58 \\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+
+\subsection{Perceptual loss function}
+
+The definition of Ledig's perceptual loss function $l^{SR}$ is critical for the performance of their generator network. They formulate the perceptual loss as the weighted sum of a content loss ($l_X^{SR}$) and an adversarial loss component as Eq.~\ref{loss}:
+\begin{equation}
+l^{SR}=l_X^{SR}+10^{-3}l_{Gen}^{SR}.   \label{loss}
+\end{equation}
+
+While $l^{SR}$ is commonly modeled based on the MSE [10, 48], he improves on Johnson \emph{et al.} \cite{Johnson2016Perceptual} and Bruna \emph{et al.} \cite{Bruna2015Super} and design a loss function that assesses a solution with respect to perceptually relevant characteristics.
+
+%------------------------------------------------------------------------
+\section{Empirical Validation of DCGANs Capabilities}
+
+The team perform experiments on three widely used benchmark datasets Set5, Set14 and BSD100, the testing set of BSD300 \cite{Martin2002A}. All experiments are performed with a scale factor of $4\times$ between low and high resolution images. The experimental results of the conducted MOS tests are summarized in Tab.~\ref{t1}.
+
+Besides, the team also evaluate the performance of the generator network without adversarial component for the two losses $l_{MSE}^{SR}$(SRResNet-MSE) and $l_{VGG/2.2}^{SR}$ (SRResNet-VGG22). They refer to SRResNet-MSE as SRResNet and quantitative results are summarized in the table above.
+
+{\small
+\bibliographystyle{ieee}
+\bibliography{egbib}
+}
+
+\end{document}
