@@ -1,0 +1,127 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\usepackage{times}
+\usepackage{multirow}
+\setmainfont{Times New Roman}
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+\usepackage{stfloats}
+\usepackage[pagebackref=true,colorlinks,linkcolor=red,citecolor=green,breaklinks=true,bookmarks=false]{hyperref}
+\cvprfinalcopy % *** Uncomment this line for the final submission
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ifcvprfinal\pagestyle{empty}\fi
+\setcounter{page}{1}
+\title{Learning from Simulated and Unsupervised Images}
+\author{Hongzhi Liu\\\\
+June 28, 2018}
+
+\begin{document}
+%%%%%%%%% TITLE
+\maketitle
+%\thispagestyle{empty}
+\begin{abstract}
+	With recent progress in graphics, it has become more tractable to train models on synthetic images, potentially avoiding the need for expensive annotations. However, learning from synthetic images may not achieve the desired performance due to a gap between synthetic and real image distributions. Today, I read a thesis written by Ashish Shrivastava who is from Apple Inc. His team introduce Simulated+Unsupervised (S+U) learning where the task is to learn a model to improve the realism of a simulator's output using unlabeled real data, while preserving the annotation information from the simulator. Besides, the team develop a method for S+U learning that uses an adversarial network similar to Generative Adversarial Networks (GANs). They show that this enables generation of highly realistic images which can demonstrate both qualitatively and with a user study.
+\end{abstract}
+%%%%%%%%% BODY TEXT
+\section{Overview of S+U Learning and SimGAN}
+
+The GAN framework learns two networks (a generator and a discriminator) with competing losses. The goal of the generator network is to map a random vector to a realistic image, whereas the goal of the discriminator is to distinguish the generated from the real images. The GAN framework was first introduced by Goodfellow \emph{et al.} \cite{Goodfellow2014Generative} to generate visually realistic images and since then, many improvements and interesting applications have been proposed \cite{Salimans2016Improved}. 
+
+Large labeled training datasets are becoming increasingly important with the recent rise in high capacity deep neural networks \cite{Deng2009ImageNet}. However, labeling such large datasets is expensive and timeconsuming. Thus, the idea of training on synthetic instead of real images has become appealing because the annotations are automatically available. Many efforts have explored using synthetic data for various prediction tasks. Shrivastava's work is  complementary to these approaches, where he improves the realism of the simulator using unlabeled real data. This approach allows the team to generate realistic training images which can be used to train any machine learning model, potentially for multiple tasks.
+
+In this paper, Ashish Shrivastava and his team propose Simulated+Unsupervised (S+U) learning, where the goal is to improve the realism of synthetic images from a simulator using unlabeled real data \cite{Shrivastava2017Learning}. The improved realism enables the training of better machine learning models on large datasets without any data collection or human annotation effort. In addition to adding realism, S+U learning should preserve annotation information for training of machine learning models, \emph{e.g.} the gaze direction in Fig.~\ref{fig:1} should be preserved.
+
+Furthermore, the team develop a method for S+U learning, which they term SimGAN that refines synthetic images from a simulator using a neural network which we call the `refiner network'. Fig.~\ref{fig:2} gives an overview of their method: a synthetic image is generated with a black box simulator and is refined using the refiner network. To add realism, they train their refiner network using an adversarial loss, similar to Generative Adversarial Networks (GANs) \cite{Goodfellow2014Generative} such that the refined images are indistinguishable from real ones using a discriminative network.
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5]{1.png}
+	\end{center}
+	\caption{Simulated+Unsupervised (S+U) learning. The task is to learn a model that improves the realism of synthetic images from a simulator using unlabeled real data, while preserving the annotation information.}
+	\label{fig:1}
+\end{figure}
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.6]{2.png}
+	\end{center}
+	\caption{Overview of SimGAN. Shrivastava refines the output of the simulator with a refiner neural network, R, that minimizes the combination of a local adversarial loss and a `selfregularization' term. The adversarial loss `fools' a discriminator network, D, that classifies an image as real or refined. The self-regularization term minimizes the image difference between the synthetic and the refined images. The refiner network and the discriminator network are updated alternately.}
+	\label{fig:2}
+\end{figure}
+
+\section{S+U Learning with SimGAN}
+
+The goal of Simulated+Unsupervised learning is to use a set of unlabeled real images $y_i\in \mathcal{Y}$ to learn a refiner $R_\theta(x)$ that refines a synthetic image x, where $\theta$ are the function parameters. Let the refined image be denoted by $\tilde{x}$, then $\tilde{x}:= R_\theta(x)$. The key requirement for S+U learning is that the refined image $\tilde{x}$ should look like a real image in appearance while preserving the annotation information from the simulator. To this end, Shrivastava proposes to learn $\theta$ by minimizing a combination of two losses as Eq.~\ref{loss}:
+\begin{equation}
+\mathcal{L}_R(\theta)=\sum_{i}l_{real}(\theta;x_i,\mathcal{Y})+\lambda l_{reg}(\theta;x_i).   \label{loss}
+\end{equation}
+where $x_i$ is the $i^{th}$ synthetic training image. The first part of the cost, $l_{real}$, adds realism to the synthetic images, while the second part, $l_{reg}$, preserves the annotation information. In the following sections, they expand this formulation and provide an algorithm to optimize for $\theta$.
+
+\subsection{Adversarial Loss with Self-Regularization}
+
+To add realism to the synthetic image, the team need to bridge the gap between the distributions of synthetic and real images. An ideal refiner will make it impossible to classify a given image as real or refined with high confidence. This need motivates the use of an adversarial discriminator network, $D_\phi$, that is trained to classify images as real vs refined, where $\phi$ are the parameters of the discriminator network. The adversarial loss used in training the refiner network, R, is responsible for `fooling' the network D into classifying the refined images as real. Following the GAN approach \cite{Goodfellow2014Generative}, they model this as a two-player minimax game, and update the refiner network, $R_\phi$, and the discriminator network, $D_\phi$, alternately. Next, they describe this intuition more precisely. The discriminator network updates its parameters by minimizing the following loss as Eq.~\ref{para}:
+\begin{equation}
+\mathcal{L}_D(\phi)=-\sum_{i}\log(D_\phi(\tilde{x}_i))-\sum_{j}\log(1-D_\phi(y_j)).   \label{para}
+\end{equation}
+This is equivalent to cross-entropy error for a two class classification problem where $D_\phi(.)$ is the probability of the input being a synthetic image, and $1−D_\phi(.)$ that of a real one. They implement $D_\phi$ as a ConvNet whose last layer outputs the probability of the sample being a refined image.
+
+\subsection{Local Adversarial Loss}
+
+Another key requirement for the refiner network is that it should learn to model the real image characteristics without introducing any artifacts. When Shrivastava and his team train a single strong discriminator network, the refiner network tends to over-emphasize certain image features to fool the current discriminator network, leading to drifting and producing artifacts. A key observation is that any local patch sampled from the refined image should have similar statistics to a real image patch. Therefore, rather than defining a global discriminator network, they can define a discriminator network that classifies all local image patches separately. This division not only limits the receptive field, and hence the capacity of the discriminator network, but also provides many samples per image for learning the discriminator network. The refiner network is also improved by having multiple `realism loss' values per image.
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5]{3.png}
+	\end{center}
+	\caption{Illustration of local adversarial loss. The discriminator network outputs a $w\times h$ probability map. The adversarial loss function is the sum of the cross-entropy losses over the local patches.}
+	\label{fig:3}
+\end{figure}
+
+In their implementation, they design the discriminator D to be a fully convolutional network that outputs $w\times h$ dimensional probability map of patches belonging to the fake class, where $w\times h$ are the number of local patches in the image. While training the refiner network, they sum the cross-entropy loss values over $w\times h$ local patches, as illustrated in Fig.~\ref{fig:3}.
+
+
+%------------------------------------------------------------------------
+\section{Evaluation of the Method}
+
+Shrivastava and his team evaluate their method for appearance-based gaze estimation in the wild on the MPIIGaze dataset \cite{Wood} and hand pose estimation on the NYU hand pose dataset of depth images. They use a fully convolutional refiner network with ResNet blocks for all of their experiments.
+
+Tab.~\ref{t1} shows a comparison to the state-of-the-art. Training the CNN on the refined images outperforms the state-of-the-art on the MPIIGaze dataset, with a relative improvement of 21\%. This large improvement shows the practical value of our method in many HCI tasks.
+
+\begin{table}
+	\caption{Comparison of SimGAN to the state-of-the-art on the MPIIGaze dataset of real eyes. The second column indicates whether the methods are trained on Real/Synthetic data. The error the is mean eye gaze estimation error in degrees. Training on refined images results in a 2.1 degree improvement, a relative 21\% improvement compared to the state-of-the-art.}\label{t1}
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			Method & R/S & Error  \\
+			\hline
+			Support Vector Regression (SVR) \cite{Schneider2014Manifold} & R & 16.5  \\
+			
+			Adaptive Linear Regression ALR) \cite{Lu2014Adaptive}& R & 16.4  \\
+			
+			Random Forest (RF) \cite{Sugano2014Learning} & R & 15.4  \\
+			
+			kNN with UT Multiview \cite{Zhang2015Appearance} & R & 16.2  \\
+			
+			CNN with UT Multiview \cite{Zhang2015Appearance} & R& 13.9  \\
+			
+			kNN with UnityEyes \cite{Wood} & S & 9.9  \\
+			
+			CNN with UnityEyes Synthetic Images & S & 11.2  \\
+			
+			CNN with UnityEyes Refined Images & S & 7.8  \\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+{\small
+\bibliographystyle{ieee}
+\bibliography{egbib}
+}
+
+\end{document}
