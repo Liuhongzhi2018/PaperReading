@@ -1,0 +1,93 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\usepackage{multirow}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+%\setmainfont{Times New Roman}
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+\usepackage{stfloats}
+\usepackage[pagebackref=true,colorlinks,linkcolor=red,citecolor=green,breaklinks=true,bookmarks=false]{hyperref}
+\cvprfinalcopy % *** Uncomment this line for the final submission
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ifcvprfinal\pagestyle{empty}\fi
+\setcounter{page}{1}
+\title{Conditional Image Synthesis}
+\author{Hongzhi Liu\\\\
+July 8, 2018}
+
+\begin{document}
+%%%%%%%%% TITLE
+\maketitle
+%\thispagestyle{empty}
+\begin{abstract}
+	Characterizing the structure of natural images has been a rich research endeavor. Recent work has shown that GANs can produce convincing image  samples on datasets with low variability and low resolution. And GANs struggle to generate globally coherent and high resolution samples, particularly from datasets with high variability. Today, I read a thesis written by Augustus Odena who is from Google Brain. His team introduce new methods for the improved training of generative adversarial networks (GANs) for image synthesis. They construct a variant of GANs employing label conditioning that results in $128\times 128$ resolution image samples exhibiting global coherence. Beside, they expand on previous work for image quality assessment to provide two new analyses for assessing the discriminability and diversity of samples from class-conditional image synthesis models.
+\end{abstract}
+%%%%%%%%% BODY TEXT
+
+\begin{figure*}[!b]
+	\begin{center}
+		\includegraphics[scale=0.6]{1.png}
+	\end{center}
+	\caption{$128\times 128$ resolution samples from 5 classes taken from an AC-GAN trained on the ImageNet dataset. Note that the classes shown have been selected to highlight the success of the model and are not representative. Samples from all ImageNet classes are linked later in the text.}
+	\label{p1}
+\end{figure*}
+\section{Overview of AC-GANs}
+
+Natural images obey intrinsic in variances and exhibit multi-scale statistical structures that have historically been difficult to quantify \cite{Simoncelli2001Natural}. Recent advances in machine learning offer an opportunity to substantially improve the quality of image models. Improved image models advance the state-of-the-art in image denoising \cite{Ball2015Density}, compression \cite{Toderici2017Full}, in-painting \cite{Galliani2017Learned} and super-resolution \cite{Ledig2017Photo}. Better models of natural images also improve performance in semi-supervised learning tasks \cite{Kingma2014Semi} and reinforcement learning problems .
+
+Generative adversarial networks (GANs) offer a distinct and promising approach that focuses on a game-theoretic formulation for training an image synthesis model. However, GANs struggle to generate globally coherent, high resolution samples-particularly from datasets with high variability. Moreover, a theoretical understanding of GANs is an on-going research topic.
+
+In this paper, Augustus Odena and his team demonstrate that that adding more structure to the GAN latent space along with a specialized cost function results in higher quality samples \cite{Odena2016Conditional}. They exhibit $128\times 128$ pixel samples from all classes of the ImageNet dataset \cite{Russakovsky2015ImageNet} with increased global coherence as shown in Fig.~\ref{p1}. Importantly, they demonstrate quantitatively that the high resolution samples are not just naive resizings of low resolution samples. In particular, downsampling their $128\times 128$ samples to $32\times 32$ leads to a 50\% decrease in visual discriminability. The team also introduce a new metric for assessing the variability across image samples and employ this metric to demonstrate that their synthesized images exhibit diversity comparable to training data for a large fraction (84.7\%) of ImageNet classes.
+
+\section{Architecture of AC-GANs}
+
+Augustus Odena and his team propose a variant of the GAN architecture which they call an auxiliary classifier GAN or AC-GAN. In the AC-GAN, every generated sample has a corresponding class label, $c\thicksim p_c$ in addition to the noise z. G uses both to generate images $X_{fake} = G(c,z)$. The discriminator gives both a probability distribution over sources and a probability distribution over the class labels, $P(S|X)$, $P(C|X)=D(X)$. The objective function has two parts that one is the log likelihood of the correct source, $L_S$  and the log-likelihood of the correct class $L_C$ as Eq.~\ref{q1}:
+\begin{equation}
+\begin{aligned}
+\begin{split}
+L_S=E[\log P(S=&real |X_{real})]\\
+&+E[\log P(S=fake |X_{fake})], \\
+L_C=E[\log P(C=&c |X_{real})]\\
+&+E[\log P(C=c |X_{fake})].
+\label{q1}
+\end{split}
+\end{aligned}
+\end{equation}
+where D is trained to maximize $L_S + L_C$ while $G$ is trained to maximize $L_C - L_S$. AC-GANs learn a representation for $z$ that is independent of class label.
+
+\begin{figure*}
+	\begin{center}
+		\includegraphics[width=0.6\textwidth]{2.png}
+	\end{center}
+	\caption{Generating high resolution images improves discriminability. Top: Training data and synthesized images from the zebra class resized to a lower spatial resolution and subsequently artificially resized to the original resolution. Bottom Left: Summary of accuracies across varying spatial resolutions for training data and image samples from $64\times 64$ and $128\times 128$ models. Bottom Right: Comparison of accuracy scores at $128\times 128$ and $32\times 32$ spatial resolutions}
+	\label{p2}
+\end{figure*}
+
+Structurally, this model is not tremendously different from existing models. However, this modification to the standard GAN formulation produces excellent results and appears to stabilize training. Moreover, they consider the AC-GAN model to be only part of the technical contributions of the work, along with their proposed methods for measuring the extent to which a model makes use of its given output resolution, methods for measuring perceptual variability of samples from the model and a thorough experimental analyis of a generative model of images that creates $128\times 128$ samples from all 1000 ImageNet classes.
+
+Early experiments demonstrated that increasing the number of classes trained on while holding the model fixed decreased the quality of the model outputs. The structure of the AC-GAN model permits separating large datasets into subsets by class and training a generator and discriminator for each subset. All ImageNet experiments are conducted using an ensemble of 100 AC-GANs, each trained on a 10 class split.
+
+%------------------------------------------------------------------------
+\section{Experiment Results of Models}
+
+Augustus Odena trains several AC-GAN models on the ImageNet data set \cite{Russakovsky2015ImageNet}. Broadly speaking, the architecture of the generator $G$ is a series of `deconvolution' layers that transform the noise $z$ and class $c$ into an image. He trains two variants of the model architecture for generating images at $128\times 128$ and $64\times 64$ spatial resolutions. The discriminator $D$ is a deep convolutional neural network with a Leaky ReLU nonlinearity.
+
+Evaluating the quality of image synthesis models is challenging due to the variety of probabilistic criteria \cite{Theis2015A} and the lack of a perceptually meaningful image similarity metric. Nonetheless, they attempt to measure the quality of the AC-GAN by building several ad-hoc measures for image sample discriminability and diversity.
+
+To measure discriminability, Augustus Odena and his team feed synthesized images to a pre-trained Inception network \cite{Szegedy2016Rethinking} and report the fraction of the samples for which the Inception network assigned the correct label. They calculate this accuracy measure on a series of real and synthesized images which have had their spatial resolution artificially decreased by bilinear interpolation on top panels in Fig.~\ref{p2}. Note that as the spatial resolution is decreased, the accuracy decreases - indicating that resulting images contain less class information as shown on below top panels in Fig.~\ref{p2}. They summarized the finding across all 1000 ImageNet classes for the ImageNet training data (black), a $128\times 128$ resolution AC-GAN (red) and a $64\times 64$ resolution AC-GAN (blue) as shown on bottom left in Fig.~\ref{p2}. The black curve (clipped) provides an upper-bound on the discriminability of real images.
+
+{\small
+\bibliographystyle{ieee}
+\bibliography{egbib}
+}
+
+\end{document}

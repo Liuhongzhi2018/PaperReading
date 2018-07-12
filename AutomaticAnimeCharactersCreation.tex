@@ -1,0 +1,122 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\usepackage{multirow}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+%\setmainfont{Times New Roman}
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+\usepackage{stfloats}
+\usepackage[pagebackref=true,colorlinks,linkcolor=red,citecolor=green,breaklinks=true,bookmarks=false]{hyperref}
+\cvprfinalcopy % *** Uncomment this line for the final submission
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ifcvprfinal\pagestyle{empty}\fi
+\setcounter{page}{1}
+\title{Automatic Anime Characters Creation}
+\author{Hongzhi Liu\\\\
+July 10, 2018}
+
+\begin{document}
+%%%%%%%%% TITLE
+\maketitle
+%\thispagestyle{empty}
+\begin{abstract}
+	Kids like anime characters, which often takes tremendous efforts to master the skill of drawing after which one are capable of designing their own characters. Automatic generation of facial images has been well studied after the Generative Adversarial Network(GAN) came out. There exists some attempts applying the GAN model to the problem of generating facial images of anime characters, but none of the existing work gives a promising result. Today, I read a thesis written by Yanghua Jin who is from School of Computer Science in Fudan University. His team explore the training of GAN models specialized on an anime facial image dataset and they address the issue from both the data and the model aspect, by collecting a more well-suited dataset and empirical application of DRAGAN. With quantitative analysis and case studies, they demonstrate that their efforts lead to a stable and high quality model.
+\end{abstract}
+%%%%%%%%% BODY TEXT
+
+\begin{figure*}[!b]
+	\begin{center}
+		\includegraphics[scale=0.6]{1.png}
+	\end{center}
+	\caption{Generator Architecture}
+	\label{p1}
+\end{figure*}
+
+\section{Overview of the Model}
+
+Existing literature provides several attempts for generation facial images of anime characters. Among them are Mattya and Rezoolab who first explored the generation of anime character faces right after the appearance of DCGAN \cite{Radford2015Unsupervised}. Besied, codes are made available online focusing on anime faces generation. However, since results from these works are blurred and distorted on an untrivial frequency, it still remains a challenge to generate industry-standard facial images for anime characters.
+
+In this paper, Yanghua Jin proposes a model that produces anime faces at high quality with promising rate of success \cite{Jin2017Towards}. Their contribution can be described as three-fold that are a clean dataset which they collected from Getchu, a suitable GAN model based on DRAGAN, and their approach to train a GAN from images without tags which can be leveraged as a general approach to training supervised or conditional model without tag data.
+
+\section{Generative Adversarial Network}
+
+Generative Adversarial Network (GAN) \cite{Goodfellow2014Generative} proposed by Goodfellow \emph{et al.}, shows impressive results in image generation \cite{Radford2015Unsupervised}, image transfer \cite{Isola2016Image}, super-resolution \cite{Ledig2017Photo} and many other generation tasks. In this work, Jin and his team explore the training of GAN models specialized on an anime facial image dataset.
+
+\begin{table*}
+	\caption{Number of dataset images for each tag.}\label{t1}
+	\begin{center}
+		\setlength{\tabcolsep}{1mm}{
+			\begin{tabular}{c c c c c c c}
+				\hline
+				blonde hair 4991 & brown hair 6659 &black hair 4842& blue hair 3289& pink hair 2486& purple hair 2972& green hair 1115\\
+				\hline
+				red hair 2417& silver hair 987 &white hair 573& orange hair 699& aqua hair 168& gray hair 57& long hair 16562\\
+				\hline
+				short hair 1403 & twintails 5360 &drill hair 1683& ponytail 8861& blush 4926& smile 5583& open mouth 4192\\
+				\hline
+				hat 1403&ribbon 5360 & glass 1683 &blue eyes 8861& red eyes 4926& brown eyes 5583& green eyes 4192\\
+				\hline
+			\end{tabular} }
+		\end{center}
+	\end{table*}
+
+
+\subsection{Vanilla GAN}
+
+GAN uses a generator network G to generate samples from $P_G$. This is done by transforming a latent noise variable $z\sim P_{noise}$ noise into a sample $G(z)$. The original GAN uses a min-max game strategy to train the generator $G$, imposing another network $D$ to distinguish samples from $G$ and real samples. Formally, the objective of GAN can be expressed as Eq.~\ref{q1}:
+\begin{equation}
+\begin{aligned}
+\begin{split}
+\min_G \max_D \mathcal{L}(D,G)&=\mathbb{E}_{x\sim P_{data}}[\log D(x)]\\
+&+\mathbb{E}_{x\sim P_{noise}}[\log (1-D(G(z)))].
+\label{q1}
+\end{split}
+\end{aligned}
+\end{equation}
+Where the discriminator $D$ try to maximize the output confidence score from real samples. Meanwhile, it also minimizes the output confidence score from fake samples generated by $G$. On contrast, the aim of $G$ is to maximize the $D$ evaluated score for its outputs, which can be viewed as deceiving $D$.
+
+\begin{figure*}
+	\begin{center}
+		\includegraphics[scale=0.6]{2.png}
+	\end{center}
+	\caption{Discriminator Architecture}
+	\label{p2}
+\end{figure*}
+
+\subsection{GAN with Labels}
+
+Incorporating label information is important in their task to provide user a way to control the generator. Their utilization of the label information is inspired by ACGAN \cite{Jin2017Towards}: The generator $G$ receive random noise $z$ along with a 34-dimension vector $c$ indicate the corresponding attribute conditions. They add a multi-label classifier on the top of discriminator network, which try to predict the assigned tags for the input images. In detail, the loss is described as Eq.~\ref{q2}:
+\begin{equation}
+\begin{aligned}
+\begin{split} \mathcal{L}_{adv}(D)=&-\mathbb{E}_{x\sim P_{data}}[\log D(x)]\\
+&-\mathbb{E}_{x\sim P_{noise},c\sim P_{cond}}[\log (1-D(G(z,c)))],\\ \mathcal{L}_{cls}(D)=&\mathbb{E}_{x\sim P_{data}}[\log P_D[label_x|x]]\\
+&+\mathbb{E}_{x\sim P_{noise},c\sim P_{cond}}[\log (P_D[c|G(z,c)])].\\
+\label{q2}
+\end{split}
+\end{aligned}
+\end{equation}
+where $P$ cond indicates the prior distribution of assigned tags.
+
+\subsection{Model Architecture}
+The generator's architecture is shown in Fig.~\ref{p1}, which is a modification from SRResNet \cite{Ledig2017Photo}. The model contains 16 ResBlocks and uses 3 sub-pixel CNN \cite{Shi2016Real} for feature map upscaling. Fig.~\ref{p2} shows the discriminator architecture, which contains 10 Resblocks in total. All batch normalization layers are removed in the discriminator, since it would bring correlations within the mini-batch, which is undesired for the computation of the gradient norm. They add an extra fully-connected layer to the last convolution layer as the attribute classifier. All weights are initialized from a Gaussian distribution with mean 0 and standard deviation 0.02.
+
+%------------------------------------------------------------------------
+\section{Experiment Results of Model}
+
+The technology of making game characters and CGs is evolving continuously, therefore the release year of the game plays an important role for the visual aspect of image quality. Jin and his team train the GAN model using images from games released after 2005 and with scaling all training images to a resolution of $128\times 128$ pixels. This gives 31255 training images in total. As one can know, characters before 2003 are old-fashioned, while characters in the recent games is cuter and have better visual quality. As Tab.~\ref{t1} states, labels are not evenly distributed in our training dataset, which results that some combinations of attributes cannot give good images. 
+
+{\small
+\bibliographystyle{ieee}
+\bibliography{egbib}
+}
+
+\end{document}
