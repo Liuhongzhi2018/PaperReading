@@ -1,4 +1,4 @@
-# Image-to-Image papers
+# Image-to-Image papers collection
 
 A collection of image-to-image papers.
 
